@@ -7,6 +7,7 @@ import { db } from '@/db';
 import { rfqs, quotes, firms, rfqInvitedDealers, awards } from '@/db/schema';
 import { maskBoard, type RawQuote, type RfqState } from '@/lib/auth/mask';
 import { bestSingle, bestBlended, savings, type QuoteLike } from '@/lib/award-math';
+import { effectiveStatus, sweepIfExpired } from '@/lib/auction-status';
 import type { Caller } from '@/lib/auth/caller';
 
 export type BoardDealer = { id: string; name: string; shortCode: string | null; colorHex: string | null };
@@ -21,6 +22,16 @@ export async function getBoard(caller: Caller, rfqId: string) {
     (caller.kind === 'user' && caller.firmId === rfq.firmId) ||
     (caller.kind === 'dealer' && caller.rfqId === rfqId);
   if (!allowed) return null;
+
+  // Lazy sweep (Decision 19): if this live RFQ has passed its deadline, flip it
+  // to under_review through recordEvent and fire the closed notification, once.
+  // Only buy-side reads trigger the flip; dealers never mutate state on read.
+  if (caller.kind === 'user') {
+    await sweepIfExpired({ id: rfq.id, firmId: rfq.firmId, ref: rfq.ref, status: rfq.status, deadline: rfq.deadline });
+  }
+  // Use the effective status downstream regardless of whether the flip landed
+  // this request, so masking and display are consistent.
+  const status = effectiveStatus(rfq);
 
   const rawQuotes = await db
     .select()
@@ -38,7 +49,7 @@ export async function getBoard(caller: Caller, rfqId: string) {
     dealerRows.map((d) => [d.id, { id: d.id, name: d.name, shortCode: d.shortCode, colorHex: d.colorHex }]),
   );
 
-  const rfqState: RfqState = { id: rfq.id, firmId: rfq.firmId, blind: rfq.blind, status: rfq.status };
+  const rfqState: RfqState = { id: rfq.id, firmId: rfq.firmId, blind: rfq.blind, status };
   const masked = maskBoard(
     caller,
     rfqState,
@@ -69,7 +80,7 @@ export async function getBoard(caller: Caller, rfqId: string) {
   const existingAward = await db.query.awards.findFirst({ where: eq(awards.rfqId, rfqId) });
 
   return {
-    rfq,
+    rfq: { ...rfq, status },
     board: masked,
     comparison,
     award: existingAward ?? null,

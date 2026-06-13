@@ -4,6 +4,7 @@
 import { eq, and, desc, sql } from 'drizzle-orm';
 import { db } from '@/db';
 import { rfqs, quotes } from '@/db/schema';
+import { effectiveStatus } from '@/lib/auction-status';
 
 export type RfqListRow = {
   id: string;
@@ -41,7 +42,9 @@ export async function listRfqs(firmId: string): Promise<RfqListRow[]> {
     .from(rfqs)
     .where(eq(rfqs.firmId, firmId))
     .orderBy(desc(rfqs.createdAt));
-  return rows;
+  // Lazy sweep: display a live-but-expired RFQ as under_review (Decision 19).
+  // The actual row flip happens on the detail read; the blotter only displays.
+  return rows.map((r) => ({ ...r, status: effectiveStatus(r) }));
 }
 
 /** Single RFQ, tenant-checked. Returns null if not found or wrong tenant. */
