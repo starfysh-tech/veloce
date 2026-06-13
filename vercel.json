@@ -1,6 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "framework": "vite",
-  "buildCommand": "vite build",
-  "outputDirectory": "dist"
+  "framework": "nextjs",
+  "crons": [
+    { "path": "/api/cron/sweep-auctions", "schedule": "* * * * *" }
+  ]
 }
