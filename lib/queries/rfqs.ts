@@ -22,8 +22,12 @@ export type RfqListRow = {
   invitedCount: number;
 };
 
-export async function listRfqs(firmId: string): Promise<RfqListRow[]> {
-  const rows = await db
+// Exported (not just inlined) so the generated SQL can be asserted in a unit
+// test without a live database — see rfqs.test.ts. Both count subqueries alias
+// the inner table and qualify the outer ref (rfqs.id); a bare column there
+// resolves against the inner table and silently yields 0 for every row.
+export function rfqListQuery(firmId: string) {
+  return db
     .select({
       id: rfqs.id,
       ref: rfqs.ref,
@@ -36,14 +40,16 @@ export async function listRfqs(firmId: string): Promise<RfqListRow[]> {
       status: rfqs.status,
       blind: rfqs.blind,
       deadline: rfqs.deadline,
-      // Inner table is aliased and the outer ref is qualified (rfqs.id) so the
-      // bare column never collides with quotes.id inside the subquery scope.
       quoteCount: sql<number>`(select count(*)::int from quotes q where q.rfq_id = rfqs.id)`,
-      invitedCount: sql<number>`(select count(*)::int from rfq_invited_dealers d where d.rfq_id = ${rfqs.id})`,
+      invitedCount: sql<number>`(select count(*)::int from rfq_invited_dealers d where d.rfq_id = rfqs.id)`,
     })
     .from(rfqs)
     .where(eq(rfqs.firmId, firmId))
     .orderBy(desc(rfqs.createdAt));
+}
+
+export async function listRfqs(firmId: string): Promise<RfqListRow[]> {
+  const rows = await rfqListQuery(firmId);
   // Lazy sweep: display a live-but-expired RFQ as under_review (Decision 19).
   // The actual row flip happens on the detail read; the blotter only displays.
   return rows.map((r) => ({ ...r, status: effectiveStatus(r) }));
