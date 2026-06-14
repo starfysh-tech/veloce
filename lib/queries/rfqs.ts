@@ -3,7 +3,7 @@
 // browser never receives another tenant's rows (Decision 11).
 import { eq, and, desc, sql } from 'drizzle-orm';
 import { db } from '@/db';
-import { rfqs, quotes } from '@/db/schema';
+import { rfqs } from '@/db/schema';
 import { effectiveStatus } from '@/lib/auction-status';
 
 export type RfqListRow = {
@@ -36,7 +36,9 @@ export async function listRfqs(firmId: string): Promise<RfqListRow[]> {
       status: rfqs.status,
       blind: rfqs.blind,
       deadline: rfqs.deadline,
-      quoteCount: sql<number>`(select count(*)::int from ${quotes} where ${quotes.rfqId} = ${rfqs.id})`,
+      // Inner table is aliased and the outer ref is qualified (rfqs.id) so the
+      // bare column never collides with quotes.id inside the subquery scope.
+      quoteCount: sql<number>`(select count(*)::int from quotes q where q.rfq_id = rfqs.id)`,
       invitedCount: sql<number>`(select count(*)::int from rfq_invited_dealers d where d.rfq_id = ${rfqs.id})`,
     })
     .from(rfqs)
