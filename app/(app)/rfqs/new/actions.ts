@@ -42,7 +42,12 @@ const LaunchRfqSchema = z.object({
   mode: z.enum(['split', 'full']),
   blind: z.boolean(),
   panelId: z.string().uuid(),
-  invited: z.array(z.string().uuid()).min(3),
+  invited: z
+    .array(z.string().uuid())
+    .min(3)
+    .refine((arr) => new Set(arr).size === arr.length, {
+      message: 'Invited dealers must be unique',
+    }),
 });
 
 export type LaunchRfqInput = z.infer<typeof LaunchRfqSchema>;
@@ -200,18 +205,20 @@ export async function launchRfqAction(input: LaunchRfqInput): Promise<void> {
     },
   );
 
-  // Post-commit: dispatch emails. lib/email.ts swallows errors (documented
-  // MVP gap in docs/open-decisions.md).
-  for (const dealerFirmId of parsed.invited) {
-    const pm = premintByDealer.get(dealerFirmId)!;
-    await sendInvitation({
-      to: pm.email,
-      publicRef,
-      rfqTitle: parsed.title,
-      token: pm.raw,
-      deadline,
-    });
-  }
+  // Post-commit: dispatch emails in parallel. lib/email.ts swallows errors
+  // internally (documented MVP gap), so Promise.all never rejects here.
+  await Promise.all(
+    parsed.invited.map((dealerFirmId) => {
+      const pm = premintByDealer.get(dealerFirmId)!;
+      return sendInvitation({
+        to: pm.email,
+        publicRef,
+        rfqTitle: parsed.title,
+        token: pm.raw,
+        deadline,
+      });
+    }),
+  );
 
   redirect(`/rfqs/${rfqId}`);
 }

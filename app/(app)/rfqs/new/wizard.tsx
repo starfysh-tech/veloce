@@ -9,6 +9,18 @@ import { TEMPLATES, type TemplateId } from '@/lib/templates';
 import { launchRfqAction, type LaunchRfqInput } from './actions';
 import type { DealerOption, PanelOption } from './page';
 
+// Next.js serializes redirect() throws with a stable `digest` field starting
+// with `NEXT_REDIRECT;`. `isRedirectError` is not publicly exported from
+// `next/navigation` in 15.0.3, so this is the documented stable check.
+function isNextRedirectError(e: unknown): boolean {
+  return (
+    typeof e === 'object' &&
+    e !== null &&
+    typeof (e as { digest?: unknown }).digest === 'string' &&
+    (e as { digest: string }).digest.startsWith('NEXT_REDIRECT')
+  );
+}
+
 const STEPS = ['Product & terms', 'Economics & size', 'Bank panel & auction', 'Review & launch'] as const;
 
 const UNDERLYINGS = ['SPX Index', 'NDX Index', 'RTY Index', 'SX5E Index', 'UKX Index'];
@@ -81,8 +93,10 @@ export function Wizard({ panels, dealers }: { panels: PanelOption[]; dealers: De
     }));
   }
 
+  const expiryValid =
+    !!f.expiry && !Number.isNaN(new Date(f.expiry + 'T00:00:00Z').getTime());
   const stepValid = [
-    true,
+    !!f.strike.trim() && expiryValid && !!f.style.trim(),
     f.notional > 0 && f.refLevel > 0,
     f.invited.length >= 3 && !!f.panelId,
     true,
@@ -120,7 +134,7 @@ export function Wizard({ panels, dealers }: { panels: PanelOption[]; dealers: De
         await launchRfqAction(payload);
       } catch (e) {
         // Next.js redirect throws an internal control-flow error — let it bubble.
-        if (e instanceof Error && e.message === 'NEXT_REDIRECT') throw e;
+        if (isNextRedirectError(e)) throw e;
         setError(e instanceof Error ? e.message : 'Failed to launch RFQ');
       }
     });
