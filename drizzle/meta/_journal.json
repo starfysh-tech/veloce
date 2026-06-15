@@ -15,6 +15,13 @@
       "when": 1781400000000,
       "tag": "0001_block_a_publicref",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1781565780724,
+      "tag": "0002_special_puppet_master",
+      "breakpoints": true
     }
   ]
 }

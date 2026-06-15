@@ -218,6 +218,7 @@ export const awards = pgTable('awards', {
   approvedAt: timestamp('approved_at', { withTimezone: true }),
 }, (t) => ({
   rfqIdx: index('awards_rfq_idx').on(t.rfqId),
+  rfqUniq: uniqueIndex('awards_rfq_uniq').on(t.rfqId),
 }));
 
 // ---------------------------------------------------------------- trades
@@ -238,6 +239,7 @@ export const trades = pgTable('trades', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 }, (t) => ({
   rfqIdx: index('trades_rfq_idx').on(t.rfqId),
+  refUniq: uniqueIndex('trades_ref_uniq').on(t.ref),
 }));
 
 // ------------------------------------------------------------- handoffs
@@ -280,6 +282,7 @@ export const exceptions = pgTable('exceptions', {
   openedAt: timestamp('opened_at', { withTimezone: true }).notNull().defaultNow(),
 }, (t) => ({
   firmIdx: index('exceptions_firm_idx').on(t.firmId),
+  firmRefUniq: uniqueIndex('exceptions_firm_ref_uniq').on(t.firmId, t.ref),
 }));
 
 // ---------------------------------------------------------------- events
