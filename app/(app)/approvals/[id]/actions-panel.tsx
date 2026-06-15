@@ -6,27 +6,36 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Icon } from '@/components/ui';
+import {
+  approveAward as approveAwardAction,
+  rejectAward as rejectAwardAction,
+  requestClarification as requestClarificationAction,
+} from '@/app/(app)/approvals/actions';
 
-// TODO(step-8): wire to actions — replace these stubs with the real server
-// actions exported from `app/(app)/approvals/actions.ts`.
-async function approveAward(_args: {
+// Thin client adapters: server actions take `committeeNote?: string`; the
+// panel passes `string | null` (null = not required). Normalize here.
+async function approveAward(args: {
   rfqId: string;
   ackedFlagIds: string[];
   committeeNote: string | null;
 }): Promise<void> {
-  throw new Error('not implemented');
+  await approveAwardAction({
+    rfqId: args.rfqId,
+    ackedFlagIds: args.ackedFlagIds,
+    committeeNote: args.committeeNote ?? undefined,
+  });
 }
-async function rejectAward(_args: {
+async function rejectAward(args: {
   rfqId: string;
   reason: string;
 }): Promise<void> {
-  throw new Error('not implemented');
+  await rejectAwardAction(args);
 }
-async function requestClarification(_args: {
+async function requestClarification(args: {
   rfqId: string;
   note: string;
 }): Promise<void> {
-  throw new Error('not implemented');
+  await requestClarificationAction(args);
 }
 
 type ActionKind = 'approve' | 'reject' | 'clarify';
@@ -80,7 +89,16 @@ export function ApprovalActions({
         setAcked(new Set());
         router.refresh();
       } catch (e) {
-        setError(e instanceof Error ? e.message : 'Action failed');
+        // Next.js serializes server-action errors; the discriminating `name`
+        // travels in the message for typed errors thrown server-side. The
+        // server message itself is already user-friendly, so just check for
+        // the sentinel substring.
+        const msg = e instanceof Error ? e.message : 'Action failed';
+        if (msg.includes('no longer awaiting approval')) {
+          setError('RFQ has moved on. Refresh the page.');
+        } else {
+          setError(msg);
+        }
       } finally {
         setSubmitting(null);
       }
