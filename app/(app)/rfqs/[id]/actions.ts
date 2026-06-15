@@ -3,12 +3,21 @@
 // computes the proposal server-side, inserts the award row, flips RFQ status,
 // and appends the event — all in one transaction (Decision 7).
 'use server';
-import { eq, asc } from 'drizzle-orm';
+import { randomUUID } from 'node:crypto';
+import { eq, asc, inArray } from 'drizzle-orm';
 import { db } from '@/db';
-import { rfqs, quotes, awards } from '@/db/schema';
+import { rfqs, quotes, awards, exceptions, firms } from '@/db/schema';
 import { resolveUser } from '@/lib/auth/caller';
 import { recordEvent } from '@/lib/record-event';
-import { bestSingle, bestBlended, savings, type QuoteLike } from '@/lib/award-math';
+import { bestSingle, bestBlended, savings, toTicks, type QuoteLike } from '@/lib/award-math';
+import {
+  type AwardFlag,
+  bestExDeviationFlag,
+  concentrationFlag,
+  projectConcentration,
+} from '@/lib/policy';
+import { getDealerConcentration } from '@/lib/queries/concentration';
+import { nextExceptionRef } from '@/lib/exception-ref';
 
 export async function recommendAwardAction(rfqId: string, mode: 'single' | 'blended') {
   const caller = await resolveUser();
@@ -39,15 +48,89 @@ export async function recommendAwardAction(rfqId: string, mode: 'single' | 'blen
     ? (blend!.blendedTicks / 10000).toFixed(4)
     : single!.price;
 
+  // ---------------------------------------------------------------- flags
+  // Snapshot dealer concentration outside the tx (read-only; the >35% rule is
+  // re-evaluated inside the approve tx — see policy.test for stale-snapshot
+  // documentation). For multi-dealer blended awards, project each allocation
+  // INDEPENDENTLY against the base snapshot: the rule asks "does ANY single
+  // dealer's projected share exceed 35%". Layering allocations cumulatively
+  // would inflate the denominator and mask a real breach.
+  const snapshot = await getDealerConcentration(rfq.firmId);
+
+  // Map dealerFirmId → short name for human-readable deviation notes.
+  const dealerIds = Array.from(new Set(allocations.map((a) => a.dealerFirmId)));
+  const dealerNameRows = dealerIds.length
+    ? await db.select({ id: firms.id, name: firms.name }).from(firms).where(inArray(firms.id, dealerIds))
+    : [];
+  const nameByDealer = new Map(dealerNameRows.map((r) => [r.id, r.name]));
+
+  const flagsById = new Map<string, AwardFlag>();
+  const deviationNotes: string[] = [];
+
+  for (const alloc of allocations) {
+    const allocNotionalMinor = Math.round((rfq.notionalMinor * alloc.pct) / 100);
+    const projected = projectConcentration(snapshot, {
+      dealerFirmId: alloc.dealerFirmId,
+      proposedNotionalMinor: allocNotionalMinor,
+    });
+    const dealerShareBps = projected[alloc.dealerFirmId]?.shareBps ?? 0;
+    const concFlag = concentrationFlag(dealerShareBps);
+    if (concFlag && !flagsById.has(concFlag.id)) flagsById.set(concFlag.id, concFlag);
+
+    // Rule (d): per-allocation deviation vs the best single quote price.
+    if (single) {
+      const allocTicks = toTicks(alloc.price);
+      const bestTicks = toTicks(single.price);
+      const devFlag = bestExDeviationFlag(allocTicks, bestTicks);
+      if (devFlag) {
+        if (!flagsById.has(devFlag.id)) flagsById.set(devFlag.id, devFlag);
+        const dealerName = nameByDealer.get(alloc.dealerFirmId) ?? alloc.dealerFirmId;
+        deviationNotes.push(
+          `Awarded ${dealerName} at ${alloc.price}, best quote was ${single.price}.`,
+        );
+      }
+    }
+  }
+
+  const flags = Array.from(flagsById.values());
+  const hasDeviation = flags.some(
+    (f) => f.severity === 'warn' && f.text.startsWith('Awarded price'),
+  );
+
+  const baseRationale = mode === 'blended'
+    ? 'Stacked partial-percentage quotes beat the best full-size level while covering 100% of size.'
+    : 'Best full-size level selected for single-counterparty execution.';
+  const rationale = deviationNotes.length
+    ? `${baseRationale}\n\nDeviation note: ${deviationNotes.join(' ')}`
+    : baseRationale;
+
+  // detail.openedExceptionRef is mutated in-place inside apply() once the
+  // firm-scoped sequence resolves. recordEvent inserts the event row AFTER
+  // apply() returns and reads `event.detail` by reference at insert time
+  // (lib/record-event.ts:44-57), so the mutation is observed.
+  const detail: {
+    mode: 'single' | 'blended';
+    allocations: typeof allocations;
+    blendedPrice: string;
+    openedExceptionRef: string | null;
+  } = { mode, allocations, blendedPrice, openedExceptionRef: null };
+
   await recordEvent(
     { kind: 'user', userId: caller.userId, label: caller.label },
     {
       firmId: rfq.firmId, rfqId,
       type: 'award_recommended',
       summary: `Recommended ${mode} award${mode === 'blended' && sav ? ` — saves ${sav.bps.toFixed(1)} bps` : ''} — routed to Treasury Committee`,
-      detail: { mode, allocations, blendedPrice },
+      detail,
     },
     async (tx) => {
+      // If rule (d) fired, reserve the exception ref now so we can both insert
+      // the row AND surface the ref in the event detail (mutation propagates
+      // because recordEvent reads `event.detail` after apply returns).
+      if (hasDeviation) {
+        detail.openedExceptionRef = await nextExceptionRef(tx, rfq.firmId, new Date().getFullYear());
+      }
+
       await tx.insert(awards).values({
         rfqId, kind: mode,
         blendedPrice,
@@ -55,15 +138,31 @@ export async function recommendAwardAction(rfqId: string, mode: 'single' | 'blen
         bestSingleDealerId: single ? single.dealerFirmId : null,
         savingsBps: sav ? String(sav.bps) : null,
         savingsMinor: sav ? sav.minor : null,
-        rationale: mode === 'blended'
-          ? 'Stacked partial-percentage quotes beat the best full-size level while covering 100% of size.'
-          : 'Best full-size level selected for single-counterparty execution.',
+        rationale,
         allocations,
-        flags: [],
+        flags,
         approved: false,
         recommendedBy: caller.userId,
       });
       await tx.update(rfqs).set({ status: 'awaiting_approval' }).where(eq(rfqs.id, rfqId));
+
+      if (hasDeviation && detail.openedExceptionRef) {
+        // Build a single exception row summarizing the best-ex deviation. One
+        // row per recommend (not one per deviating allocation) — the approve
+        // path closes "all open exceptions for the rfq" without a kind
+        // discriminator, so multiplying rows here would create ambiguity.
+        const detailText = deviationNotes.join(' ');
+        await tx.insert(exceptions).values({
+          id: randomUUID(),
+          ref: detail.openedExceptionRef,
+          firmId: rfq.firmId,
+          rfqId,
+          severity: 'warn',
+          text: `Best-execution deviation: ${detailText}`,
+          status: 'open',
+          open: true,
+        });
+      }
     },
   );
 }
