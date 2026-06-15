@@ -40,7 +40,7 @@ export default async function DealerQuotePage({ params }: { params: Promise<{ to
         <div className="detail-head">
           <div style={{ flex: 1, minWidth: 240 }}>
             <div className="row" style={{ gap: 8 }}>
-              <span className="mono t-faint">{rfq.ref}</span>
+              <span className="mono t-faint">{rfq.publicRef}</span>
               <Pill status={rfq.status} />
               {rfq.blind && <span className="badge">BLIND</span>}
             </div>

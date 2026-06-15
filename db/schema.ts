@@ -12,7 +12,7 @@
 // ---------------------------------------------------------------------------
 import {
   pgTable, uuid, text, timestamp, bigint, numeric, integer,
-  boolean, jsonb, pgEnum, index, primaryKey,
+  boolean, jsonb, pgEnum, index, uniqueIndex, primaryKey,
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
@@ -103,6 +103,9 @@ export const rfqs = pgTable('rfqs', {
   id: uuid('id').primaryKey().defaultRandom(),
   // Human-facing reference, e.g. VEL-2026-0142. Unique per tenant.
   ref: text('ref').notNull(),
+  // Opaque, globally-unique public-facing reference (e.g. RFQ-AB12CD34).
+  // Used in URLs / share links so internal `ref` is not exposed.
+  publicRef: text('public_ref').notNull().unique(),
   firmId: uuid('firm_id').notNull().references(() => firms.id),
   requesterId: uuid('requester_id').references(() => users.id),
 
@@ -140,7 +143,7 @@ export const rfqs = pgTable('rfqs', {
   firmIdx: index('rfqs_firm_idx').on(t.firmId),
   statusIdx: index('rfqs_status_idx').on(t.status),
   deadlineIdx: index('rfqs_deadline_idx').on(t.deadline),
-  refIdx: index('rfqs_ref_idx').on(t.firmId, t.ref),
+  refIdx: uniqueIndex('rfqs_firm_ref_uniq').on(t.firmId, t.ref),
 }));
 
 // Which dealers were invited to an RFQ (the panel snapshot at launch).

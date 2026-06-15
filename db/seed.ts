@@ -7,6 +7,7 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import { createClient } from '@supabase/supabase-js';
 import { inArray } from 'drizzle-orm';
+import { generatePublicRef } from '../lib/public-ref';
 import * as schema from './schema';
 import {
   FIRMS, USERS, PANELS, RFQS, QUOTES, DEALER_EMAILS, DEMO_PASSWORD, seedId,
@@ -88,7 +89,9 @@ async function main() {
     const id = seedId(r.key);
     const deadline = deadlineFrom(r.deadlineOffsetMin);
     await db.insert(schema.rfqs).values({
-      id, ref: r.ref, firmId: r.firmId, requesterId: r.requesterId,
+      id, ref: r.ref,
+      publicRef: generatePublicRef(),
+      firmId: r.firmId, requesterId: r.requesterId,
       title: r.title, product: r.product, template: r.template, side: r.side,
       underlying: r.underlying, refLevel: r.refLevel, strike: r.strike,
       expiry: r.expiry, style: r.style, tenor: r.tenor,

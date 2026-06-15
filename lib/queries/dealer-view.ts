@@ -21,7 +21,7 @@ export async function getDealerView(caller: Caller, rfqId: string) {
   // Select only presentational instrument fields — no firmId, no requesterId.
   const rfqRow = await db
     .select({
-      id: rfqs.id, ref: rfqs.ref, title: rfqs.title, product: rfqs.product,
+      id: rfqs.id, ref: rfqs.ref, publicRef: rfqs.publicRef, title: rfqs.title, product: rfqs.product,
       side: rfqs.side, underlying: rfqs.underlying, refLevel: rfqs.refLevel,
       strike: rfqs.strike, expiry: rfqs.expiry, style: rfqs.style, tenor: rfqs.tenor,
       notionalMinor: rfqs.notionalMinor, ccy: rfqs.ccy, notionalLabel: rfqs.notionalLabel,
