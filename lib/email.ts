@@ -26,7 +26,7 @@ async function send(to: string, subject: string, html: string) {
 
 /** Dealer invitation carrying the magic-link to the scoped response page. */
 export async function sendInvitation(opts: {
-  to: string; rfqRef: string; rfqTitle: string; token: string; deadline: Date | null;
+  to: string; publicRef: string; rfqTitle: string; token: string; deadline: Date | null;
 }) {
   const link = `${SITE}/quote/${opts.token}`;
   const deadlineStr = opts.deadline
@@ -34,10 +34,10 @@ export async function sendInvitation(opts: {
     : 'see RFQ';
   await send(
     opts.to,
-    `Quote request: ${opts.rfqRef} — ${opts.rfqTitle}`,
+    `Quote request: ${opts.publicRef} — ${opts.rfqTitle}`,
     `<div style="font-family:system-ui,sans-serif;max-width:520px">
       <h2 style="margin:0 0 4px">You're invited to quote</h2>
-      <p style="color:#555">${opts.rfqRef} — ${opts.rfqTitle}</p>
+      <p style="color:#555">${opts.publicRef} — ${opts.rfqTitle}</p>
       <p>Auction closes: <b>${deadlineStr}</b></p>
       <p><a href="${link}" style="display:inline-block;background:#4d7dfb;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:600">Respond to this RFQ</a></p>
       <p style="color:#888;font-size:12px">This link is unique to your firm and this RFQ. Do not forward it.</p>

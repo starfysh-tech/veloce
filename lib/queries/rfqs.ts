@@ -9,6 +9,7 @@ import { effectiveStatus } from '@/lib/auction-status';
 export type RfqListRow = {
   id: string;
   ref: string;
+  publicRef: string;
   title: string;
   product: string;
   tenor: string | null;
@@ -31,6 +32,7 @@ export function rfqListQuery(firmId: string) {
     .select({
       id: rfqs.id,
       ref: rfqs.ref,
+      publicRef: rfqs.publicRef,
       title: rfqs.title,
       product: rfqs.product,
       tenor: rfqs.tenor,
