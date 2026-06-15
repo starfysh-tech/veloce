@@ -8,9 +8,10 @@ import postgres from 'postgres';
 import { createClient } from '@supabase/supabase-js';
 import { inArray } from 'drizzle-orm';
 import { generatePublicRef } from '../lib/public-ref';
+import { makeAwardFlag } from '../lib/policy';
 import * as schema from './schema';
 import {
-  FIRMS, USERS, PANELS, RFQS, QUOTES, DEALER_EMAILS, DEMO_PASSWORD, seedId,
+  FIRMS, USERS, PANELS, RFQS, QUOTES, DEALER_EMAILS, DEMO_PASSWORD, DEALER, seedId,
 } from './seed-data';
 
 const DB_URL = process.env.DATABASE_URL;
@@ -128,6 +129,49 @@ async function main() {
     });
   }
   console.log(`  ${QUOTES.length} quotes`);
+
+  // --- block-b: seed a recommended award for rfq:0141 ---------------------
+  // Mirrors what recommendAwardAction(rfqKey, 'blended') would produce, but
+  // server actions need cookie auth (resolveUser) which CLI scripts can't
+  // satisfy — so we insert the result directly. Values reflect:
+  //   $120M Russell 2000 collar, quotes Atlas 0.4500/50%, Kestrel 0.5200/100%,
+  //   Marlowe 0.5800/100%. Blended fill: Atlas 50% + Kestrel 50% = 0.4850
+  //   blended; best single = Kestrel @ 0.5200. Atlas's 0.4500 deviates from
+  //   the best single → opens an exception. With no prior trades, projected
+  //   concentration for any single dealer is 100% → also flags.
+  const meridian = seedId('firm:meridian');
+  const dana = seedId('user:dana');
+  const rfq0141Id = seedId('rfq:0141');
+  const concFlag = makeAwardFlag('warn', 'Dealer concentration projected at 100.0% (>35% threshold)');
+  const devFlag = makeAwardFlag('warn', 'Awarded price 0.4500 deviates from best quote 0.5200');
+  await db.insert(schema.awards).values({
+    rfqId: rfq0141Id,
+    kind: 'blended',
+    blendedPrice: '0.4850',
+    bestSinglePrice: '0.5200',
+    bestSingleDealerId: DEALER.kestrel,
+    savingsBps: '673.08',
+    savingsMinor: 42_000_000_00, // ~$4.2M @ 350 bps of $120M
+    rationale: 'Blended fill: Atlas 50% @ 0.4500 + Kestrel 50% @ 0.5200.\n\n' +
+      'Deviation note: Atlas allocation at 0.4500 deviates from the best single quote (Kestrel @ 0.5200).',
+    allocations: [
+      { dealerFirmId: DEALER.atlas, pct: 50, price: '0.4500' },
+      { dealerFirmId: DEALER.kestrel, pct: 50, price: '0.5200' },
+    ],
+    flags: [concFlag, devFlag],
+    approved: false,
+    recommendedBy: dana,
+  });
+  await db.insert(schema.exceptions).values({
+    ref: 'EX-2026-0001',
+    firmId: meridian,
+    rfqId: rfq0141Id,
+    severity: 'warn',
+    text: 'Best-execution deviation: Atlas allocation at 0.4500 vs best single quote 0.5200 (Kestrel).',
+    status: 'open',
+    open: true,
+  });
+  console.log('  1 recommended award + 1 open exception for rfq:0141');
 
   console.log('\nDealer magic-link tokens for the live RFQ (dev only):');
   tokenLines.forEach((l) => console.log(l));
