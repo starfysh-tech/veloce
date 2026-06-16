@@ -25,7 +25,7 @@
   "command": {
     "validate": {
       "description": "Run Veloce validation checks and report exact results.",
-      "prompt": "Run npm test, npx tsc --noEmit, and npm run lint. Report the exact pass/fail result for each command. If any command is skipped or fails, say so explicitly and do not claim the project is validated."
+      "template": "Run npm test, npx tsc --noEmit, and npm run lint. Report the exact pass/fail result for each command. If any command is skipped or fails, say so explicitly and do not claim the project is validated."
     }
   }
 }
