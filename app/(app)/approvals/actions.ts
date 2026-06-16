@@ -9,11 +9,11 @@
 // docs/blocks/block-b-approvals.md "Decisions resolved").
 'use server';
 import { and, eq } from 'drizzle-orm';
-import { db } from '@/db';
 import { rfqs, awards, trades, exceptions } from '@/db/schema';
 import { resolveUser } from '@/lib/auth/caller';
 import { recordEvent } from '@/lib/record-event';
 import { allocNotionalMinor } from '@/lib/award-math';
+import { getRfqFirmIdOrThrow } from '@/lib/queries/rfqs';
 import {
   type AwardFlag,
   validateFlagAcks,
@@ -50,18 +50,10 @@ export async function approveAward(input: {
 
   // Cheap pre-tx fetch of firmId — needed to build the EventInput before
   // opening recordEvent. The TRUE tenant gate runs inside apply(tx) after the
-  // conditional UPDATE returns (line ~100); the concentration SNAPSHOT also
-  // runs inside the tx (line ~107) so it sees committed state at the moment
-  // the rfq row is locked, eliminating the inter-RFQ drift window an outer
-  // snapshot would have (other approvers can commit trades for the same firm
-  // between an outer snapshot and the conditional UPDATE).
-  const rfqRow = await db
-    .select({ firmId: rfqs.firmId })
-    .from(rfqs)
-    .where(eq(rfqs.id, rfqId))
-    .limit(1);
-  if (!rfqRow.length) throw new Error('RFQ not found.');
-  if (rfqRow[0].firmId !== caller.firmId) throw new Error('Not your firm');
+  // conditional UPDATE returns; the concentration snapshot also runs inside
+  // the tx so it sees committed state at the moment the rfq row is locked,
+  // eliminating the inter-RFQ drift window an outer snapshot would have.
+  const firmId = await getRfqFirmIdOrThrow(rfqId, caller.firmId);
 
   // Mutable detail object — recordEvent reads `event.detail` AFTER apply()
   // returns (lib/record-event.ts:44-57), so mutations inside apply() are
@@ -81,7 +73,7 @@ export async function approveAward(input: {
   const result = await recordEvent(
     { kind: 'user', userId: caller.userId, label: caller.label },
     {
-      firmId: rfqRow[0].firmId,
+      firmId,
       rfqId,
       type: 'award_approved',
       summary: 'Award approved',
@@ -235,18 +227,12 @@ export async function rejectAward(input: { rfqId: string; reason: string }) {
     throw new Error('A reason is required to reject an award.');
   }
 
-  const rfqRow = await db
-    .select({ firmId: rfqs.firmId })
-    .from(rfqs)
-    .where(eq(rfqs.id, input.rfqId))
-    .limit(1);
-  if (!rfqRow.length) throw new Error('RFQ not found.');
-  if (rfqRow[0].firmId !== caller.firmId) throw new Error('Not your firm');
+  const firmId = await getRfqFirmIdOrThrow(input.rfqId, caller.firmId);
 
   await recordEvent(
     { kind: 'user', userId: caller.userId, label: caller.label },
     {
-      firmId: rfqRow[0].firmId,
+      firmId,
       rfqId: input.rfqId,
       type: 'award_rejected',
       summary: 'Award rejected',
@@ -286,18 +272,12 @@ export async function requestClarification(input: {
     throw new Error('A note is required to request clarification.');
   }
 
-  const rfqRow = await db
-    .select({ firmId: rfqs.firmId })
-    .from(rfqs)
-    .where(eq(rfqs.id, input.rfqId))
-    .limit(1);
-  if (!rfqRow.length) throw new Error('RFQ not found.');
-  if (rfqRow[0].firmId !== caller.firmId) throw new Error('Not your firm');
+  const firmId = await getRfqFirmIdOrThrow(input.rfqId, caller.firmId);
 
   await recordEvent(
     { kind: 'user', userId: caller.userId, label: caller.label },
     {
-      firmId: rfqRow[0].firmId,
+      firmId,
       rfqId: input.rfqId,
       type: 'clarification_requested',
       summary: 'Clarification requested',

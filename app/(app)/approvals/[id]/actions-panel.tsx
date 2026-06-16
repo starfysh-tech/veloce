@@ -1,42 +1,14 @@
 // app/(app)/approvals/[id]/actions-panel.tsx — client component. The three
-// approver actions (approve / reject / request clarification). Server actions
-// live in app/(app)/approvals/actions.ts which is step 8 work and does not
-// exist yet — the imports below are stubbed so this file typechecks today.
+// approver actions (approve / reject / request clarification).
 'use client';
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Icon } from '@/components/ui';
 import {
-  approveAward as approveAwardAction,
-  rejectAward as rejectAwardAction,
-  requestClarification as requestClarificationAction,
+  approveAward,
+  rejectAward,
+  requestClarification,
 } from '@/app/(app)/approvals/actions';
-
-// Thin client adapters: server actions take `committeeNote?: string`; the
-// panel passes `string | null` (null = not required). Normalize here.
-async function approveAward(args: {
-  rfqId: string;
-  ackedFlagIds: string[];
-  committeeNote: string | null;
-}): Promise<void> {
-  await approveAwardAction({
-    rfqId: args.rfqId,
-    ackedFlagIds: args.ackedFlagIds,
-    committeeNote: args.committeeNote ?? undefined,
-  });
-}
-async function rejectAward(args: {
-  rfqId: string;
-  reason: string;
-}): Promise<void> {
-  await rejectAwardAction(args);
-}
-async function requestClarification(args: {
-  rfqId: string;
-  note: string;
-}): Promise<void> {
-  await requestClarificationAction(args);
-}
 
 type ActionKind = 'approve' | 'reject' | 'clarify';
 
@@ -76,7 +48,7 @@ export function ApprovalActions({
     });
   }
 
-  function run(kind: ActionKind, fn: () => Promise<void>, successMsg: string) {
+  function run(kind: ActionKind, fn: () => Promise<unknown>, successMsg: string) {
     setError(null);
     setSuccess(null);
     setSubmitting(kind);
@@ -199,7 +171,7 @@ export function ApprovalActions({
                 approveAward({
                   rfqId,
                   ackedFlagIds: Array.from(acked),
-                  committeeNote: requiresCommitteeNote ? note.trim() : null,
+                  committeeNote: requiresCommitteeNote ? note.trim() : undefined,
                 }),
               `Approved ${awardRefForToast}`,
             )

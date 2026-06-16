@@ -6,6 +6,27 @@ import { db } from '@/db';
 import { rfqs } from '@/db/schema';
 import { effectiveStatus } from '@/lib/auction-status';
 
+/**
+ * Resolve an RFQ's `firmId`, asserting it belongs to `callerFirmId`. Throws if
+ * the RFQ doesn't exist or belongs to another firm. Used by approver actions
+ * to derive the EventInput.firmId before opening recordEvent — the conditional
+ * UPDATE inside the tx is the real source of truth for tenant ownership, but
+ * the EventInput needs firmId up front.
+ */
+export async function getRfqFirmIdOrThrow(
+  rfqId: string,
+  callerFirmId: string,
+): Promise<string> {
+  const rows = await db
+    .select({ firmId: rfqs.firmId })
+    .from(rfqs)
+    .where(eq(rfqs.id, rfqId))
+    .limit(1);
+  if (!rows.length) throw new Error('RFQ not found.');
+  if (rows[0].firmId !== callerFirmId) throw new Error('Not your firm');
+  return rows[0].firmId;
+}
+
 export type RfqListRow = {
   id: string;
   ref: string;

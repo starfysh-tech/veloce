@@ -150,8 +150,12 @@ async function main() {
     blendedPrice: '0.4850',
     bestSinglePrice: '0.5200',
     bestSingleDealerId: DEALER.kestrel,
-    savingsBps: '673.08',
-    savingsMinor: 42_000_000_00, // ~$4.2M @ 350 bps of $120M
+    // savings() formula in lib/award-math.ts:94-96 (matches what
+    // recommendAwardAction writes). deltaTicks = toTicks(0.5200) - 4850 = 350.
+    //   bps   = (350 / SCALE) * 100        = 3.50
+    //   minor = round((350 / SCALE / 100) * 12_000_000_000) = 4_200_000 cents
+    savingsBps: '3.50',
+    savingsMinor: 4_200_000,
     rationale: 'Blended fill: Atlas 50% @ 0.4500 + Kestrel 50% @ 0.5200.\n\n' +
       'Deviation note: Atlas allocation at 0.4500 deviates from the best single quote (Kestrel @ 0.5200).',
     allocations: [
