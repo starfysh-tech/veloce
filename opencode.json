@@ -1,0 +1,31 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "lsp": true,
+  "instructions": ["AGENTS.md", "CLAUDE.md"],
+  "permission": {
+    "bash": {
+      "*": "ask",
+      "npm test": "allow",
+      "npm run lint": "allow",
+      "npx tsc --noEmit": "allow",
+      "git status": "allow",
+      "git diff*": "allow",
+      "git log*": "allow",
+      "git reset*": "deny",
+      "git clean*": "deny",
+      "rm *": "deny",
+      "git checkout*": "ask",
+      "npm run db:generate": "ask",
+      "npm run db:migrate": "ask"
+    },
+    "external_directory": {
+      "*": "ask"
+    }
+  },
+  "command": {
+    "validate": {
+      "description": "Run Veloce validation checks and report exact results.",
+      "prompt": "Run npm test, npx tsc --noEmit, and npm run lint. Report the exact pass/fail result for each command. If any command is skipped or fails, say so explicitly and do not claim the project is validated."
+    }
+  }
+}
