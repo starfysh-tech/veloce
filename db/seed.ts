@@ -7,8 +7,12 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import { createClient } from '@supabase/supabase-js';
 import { inArray } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { generatePublicRef } from '../lib/public-ref';
 import { makeAwardFlag } from '../lib/policy';
+import { generateTradeRef } from '../lib/trade-ref';
+import { generateHandoffRef } from '../lib/handoff-ref';
+import { buildStpPayload, payloadLabel, STP_CHANNEL, type StpFirmInput } from '../lib/stp';
 import * as schema from './schema';
 import {
   FIRMS, USERS, PANELS, RFQS, QUOTES, DEALER_EMAILS, DEMO_PASSWORD, DEALER, seedId,
@@ -176,6 +180,99 @@ async function main() {
     open: true,
   });
   console.log('  1 recommended award + 1 open exception for rfq:0141');
+
+  // --- block-c: backfill trades for awarded/in_stp RFQs ------------------
+  // rfq:0139 (HALCYON, awarded, EURO STOXX variance swap): full allocation to
+  // Marlowe @ 21.4000 (the best of the three quotes seeded at QUOTES). No
+  // handoff yet — the user clicks Generate handoff on /ops to mint one.
+  //
+  // rfq:0138 (MERIDIAN, in_stp, NDX put spread): full allocation to Kestrel
+  // @ 1.9200 (matches the POC's TRD-3104). Plus one pre-sent handoff with a
+  // generated FpML payload and one open SSI-mismatch exception so /ops has
+  // an interesting lifecycle to advance on first load. Handoff/exception
+  // rows cascade with the rfq delete above (db/schema.ts:251,264) so the
+  // re-seed stays idempotent.
+  const firmsById: Record<string, StpFirmInput> = Object.fromEntries(
+    FIRMS.map((f) => [f.id, { id: f.id, name: f.name, lei: f.lei, shortCode: f.shortCode }]),
+  );
+
+  const rfq0139Id = seedId('rfq:0139');
+  const rfq0139Public = (await db.query.rfqs.findFirst({ where: eq(schema.rfqs.id, rfq0139Id) }))!.publicRef;
+  await db.insert(schema.trades).values([
+    {
+      ref: generateTradeRef(),
+      rfqId: rfq0139Id,
+      dealerFirmId: DEALER.marlowe,
+      pct: 100,
+      allocNotionalMinor: 450_000 * 100,
+      ccy: 'EUR',
+      price: '21.4000',
+      priceUnit: 'vol strike',
+      status: 'captured',
+      tradeDate: '14 Jun 2026',
+      settle: 'T+2 (16 Jun 2026)',
+      uti: `UTI-${rfq0139Public}-MRL-01`,
+    },
+  ]);
+  console.log('  1 captured trade for rfq:0139');
+
+  const rfq0138Id = seedId('rfq:0138');
+  const rfq0138 = (await db.query.rfqs.findFirst({ where: eq(schema.rfqs.id, rfq0138Id) }))!;
+  const [insertedTrade0138] = await db.insert(schema.trades).values({
+    ref: generateTradeRef(),
+    rfqId: rfq0138Id,
+    dealerFirmId: DEALER.kestrel,
+    pct: 100,
+    allocNotionalMinor: 150_000_000 * 100,
+    ccy: 'USD',
+    price: '1.9200',
+    priceUnit: '% of notional',
+    status: 'sent',
+    tradeDate: '13 Jun 2026',
+    settle: 'T+2 (15 Jun 2026)',
+    uti: `UTI-${rfq0138.publicRef}-KST-01`,
+  }).returning();
+
+  const stpTrade0138 = {
+    ref: insertedTrade0138.ref,
+    dealerFirmId: insertedTrade0138.dealerFirmId,
+    pct: insertedTrade0138.pct,
+    allocNotionalMinor: insertedTrade0138.allocNotionalMinor,
+    price: insertedTrade0138.price,
+    uti: insertedTrade0138.uti,
+  };
+  const handoffPayload = buildStpPayload({
+    rfq: {
+      publicRef: rfq0138.publicRef,
+      product: rfq0138.product,
+      underlying: rfq0138.underlying!,
+      expiry: rfq0138.expiry!,
+      strike: rfq0138.strike!,
+      notionalMinor: rfq0138.notionalMinor,
+      ccy: rfq0138.ccy,
+      quoteUnit: rfq0138.quoteUnit,
+    },
+    trades: [stpTrade0138],
+    firms: firmsById,
+    generatedAt: new Date(now - 2 * 60 * 60_000),
+  });
+  const [insertedHandoff] = await db.insert(schema.handoffs).values({
+    ref: generateHandoffRef(),
+    rfqId: rfq0138Id,
+    tradeIds: [insertedTrade0138.id],
+    channel: STP_CHANNEL,
+    payloadLabel: payloadLabel(1),
+    payload: handoffPayload,
+    status: 'sent',
+    sentAt: new Date(now - 2 * 60 * 60_000),
+  }).returning();
+  await db.insert(schema.handoffExceptions).values({
+    handoffId: insertedHandoff.id,
+    severity: 'warn',
+    text: 'Counterparty SSI mismatch (USD wire vs book SSI). Awaiting confirmation from Kestrel ops.',
+    open: true,
+  });
+  console.log('  1 sent trade + 1 handoff + 1 open exception for rfq:0138');
 
   console.log('\nDealer magic-link tokens for the live RFQ (dev only):');
   tokenLines.forEach((l) => console.log(l));
