@@ -77,10 +77,10 @@ describe('buildStpPayload', () => {
 
 describe('payloadLabel', () => {
   it('singular for one leg', () => {
-    expect(payloadLabel([TRADES[0]])).toBe('FpML 5.12 (representative)');
+    expect(payloadLabel(1)).toBe('FpML 5.12 (representative)');
   });
   it('count for multi-leg', () => {
-    expect(payloadLabel(TRADES)).toBe('FpML 5.12 (representative) · 2 legs');
+    expect(payloadLabel(2)).toBe('FpML 5.12 (representative) · 2 legs');
   });
 });
 

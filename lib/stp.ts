@@ -137,10 +137,8 @@ export function buildStpPayload(input: {
   };
 }
 
-export function payloadLabel(trades: StpTradeInput[]): StpPayloadLabel {
-  return trades.length > 1
-    ? `${PAYLOAD_FORMAT} · ${trades.length} legs`
-    : PAYLOAD_FORMAT;
+export function payloadLabel(legCount: number): StpPayloadLabel {
+  return legCount > 1 ? `${PAYLOAD_FORMAT} · ${legCount} legs` : PAYLOAD_FORMAT;
 }
 
 export { CHANNEL as STP_CHANNEL };

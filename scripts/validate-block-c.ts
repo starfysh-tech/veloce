@@ -8,13 +8,11 @@
 //   1. `npm run db:seed` — produces rfq:0138 (in_stp, 1 sent trade,
 //      1 sent handoff, 1 open exception) and rfq:0139 (awarded, 1 captured
 //      trade, no handoff).
-//   2. Sign in as tomas@meridian.example (ops).
-//   3. /ops → click "Generate handoff" for rfq:0139 (HALCYON appears in the
-//      blotter; ops still sees Meridian-scope only — actually rfq:0139 is
-//      HALCYON-owned, so use a HALCYON ops user if testing that case; for
-//      this script's MERIDIAN flow stick with rfq:0138).
-//   4. /ops → on the rfq:0138 handoff card click "Resolve" on the open
-//      exception, then "Mark matched", then "Mark affirmed".
+//   2. Sign in as priya@halcyon.example (HALCYON ops). /ops → click
+//      "Generate handoff" for rfq:0139 to mint the handoff and flip rfq.
+//   3. Sign in as tomas@meridian.example (MERIDIAN ops). /ops → on the
+//      rfq:0138 handoff card click "Resolve" on the open exception, then
+//      "Mark matched", then "Mark affirmed".
 //
 // Then run:
 //   npx tsx --env-file-if-exists=.env scripts/validate-block-c.ts

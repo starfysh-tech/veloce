@@ -218,9 +218,8 @@ async function main() {
 
   const rfq0138Id = seedId('rfq:0138');
   const rfq0138 = (await db.query.rfqs.findFirst({ where: eq(schema.rfqs.id, rfq0138Id) }))!;
-  const t0138Ref = generateTradeRef();
-  const t0138: typeof schema.trades.$inferInsert = {
-    ref: t0138Ref,
+  const [insertedTrade0138] = await db.insert(schema.trades).values({
+    ref: generateTradeRef(),
     rfqId: rfq0138Id,
     dealerFirmId: DEALER.kestrel,
     pct: 100,
@@ -232,9 +231,16 @@ async function main() {
     tradeDate: '13 Jun 2026',
     settle: 'T+2 (15 Jun 2026)',
     uti: `UTI-${rfq0138.publicRef}-KST-01`,
-  };
-  const [insertedTrade0138] = await db.insert(schema.trades).values(t0138).returning();
+  }).returning();
 
+  const stpTrade0138 = {
+    ref: insertedTrade0138.ref,
+    dealerFirmId: insertedTrade0138.dealerFirmId,
+    pct: insertedTrade0138.pct,
+    allocNotionalMinor: insertedTrade0138.allocNotionalMinor,
+    price: insertedTrade0138.price,
+    uti: insertedTrade0138.uti,
+  };
   const handoffPayload = buildStpPayload({
     rfq: {
       publicRef: rfq0138.publicRef,
@@ -246,14 +252,7 @@ async function main() {
       ccy: rfq0138.ccy,
       quoteUnit: rfq0138.quoteUnit,
     },
-    trades: [{
-      ref: insertedTrade0138.ref,
-      dealerFirmId: insertedTrade0138.dealerFirmId,
-      pct: insertedTrade0138.pct,
-      allocNotionalMinor: insertedTrade0138.allocNotionalMinor,
-      price: insertedTrade0138.price,
-      uti: insertedTrade0138.uti,
-    }],
+    trades: [stpTrade0138],
     firms: firmsById,
     generatedAt: new Date(now - 2 * 60 * 60_000),
   });
@@ -262,14 +261,7 @@ async function main() {
     rfqId: rfq0138Id,
     tradeIds: [insertedTrade0138.id],
     channel: STP_CHANNEL,
-    payloadLabel: payloadLabel([{
-      ref: insertedTrade0138.ref,
-      dealerFirmId: insertedTrade0138.dealerFirmId,
-      pct: insertedTrade0138.pct,
-      allocNotionalMinor: insertedTrade0138.allocNotionalMinor,
-      price: insertedTrade0138.price,
-      uti: insertedTrade0138.uti,
-    }]),
+    payloadLabel: payloadLabel(1),
     payload: handoffPayload,
     status: 'sent',
     sentAt: new Date(now - 2 * 60 * 60_000),

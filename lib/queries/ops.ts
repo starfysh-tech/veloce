@@ -149,39 +149,45 @@ export async function getOpsHandoffs(firmId: string): Promise<OpsHandoffRow[]> {
   const hRows = await opsHandoffsQuery(firmId);
   if (hRows.length === 0) return [];
 
-  // Resolve trade legs in a single query, then group in JS. Same anti-explode
-  // pattern as lib/queries/approvals.ts (separate roundtrips beat the row
-  // multiplication of nested left joins).
+  // Resolve trade legs and handoff exceptions in parallel, then group in JS.
+  // Both queries derive from hRows but have no dependency on each other, so
+  // Promise.all saves one RTT per page render. Same anti-explode pattern as
+  // lib/queries/approvals.ts (separate roundtrips beat the row multiplication
+  // of nested left joins).
   const allTradeIds = Array.from(new Set(hRows.flatMap((h) => (h.tradeIds as string[]) ?? [])));
-  const legRows = allTradeIds.length
-    ? await db
-        .select({
-          tradeId: trades.id,
-          tradeRef: trades.ref,
-          dealerFirmId: trades.dealerFirmId,
-          dealerName: firms.name,
-          pct: trades.pct,
-          price: trades.price,
-        })
-        .from(trades)
-        .leftJoin(firms, eq(firms.id, trades.dealerFirmId))
-        .where(inArray(trades.id, allTradeIds))
-    : [];
-  const legsById = new Map(legRows.map((l) => [l.tradeId, l]));
-
   const handoffIds = hRows.map((h) => h.handoffId);
-  const exRows = await db
-    .select({
-      id: handoffExceptions.id,
-      handoffId: handoffExceptions.handoffId,
-      severity: handoffExceptions.severity,
-      text: handoffExceptions.text,
-      open: handoffExceptions.open,
-      createdAt: handoffExceptions.createdAt,
-    })
-    .from(handoffExceptions)
-    .where(inArray(handoffExceptions.handoffId, handoffIds))
-    .orderBy(desc(handoffExceptions.createdAt));
+  const [legRows, exRows] = await Promise.all([
+    allTradeIds.length
+      ? db
+          .select({
+            tradeId: trades.id,
+            tradeRef: trades.ref,
+            dealerFirmId: trades.dealerFirmId,
+            dealerName: firms.name,
+            pct: trades.pct,
+            price: trades.price,
+          })
+          .from(trades)
+          .leftJoin(firms, eq(firms.id, trades.dealerFirmId))
+          .where(inArray(trades.id, allTradeIds))
+      : Promise.resolve([] as Array<{
+          tradeId: string; tradeRef: string; dealerFirmId: string;
+          dealerName: string | null; pct: number; price: string;
+        }>),
+    db
+      .select({
+        id: handoffExceptions.id,
+        handoffId: handoffExceptions.handoffId,
+        severity: handoffExceptions.severity,
+        text: handoffExceptions.text,
+        open: handoffExceptions.open,
+        createdAt: handoffExceptions.createdAt,
+      })
+      .from(handoffExceptions)
+      .where(inArray(handoffExceptions.handoffId, handoffIds))
+      .orderBy(desc(handoffExceptions.createdAt)),
+  ]);
+  const legsById = new Map(legRows.map((l) => [l.tradeId, l]));
   const exByHandoff = new Map<string, OpsHandoffRow['exceptions']>();
   for (const e of exRows) {
     const list = exByHandoff.get(e.handoffId) ?? [];

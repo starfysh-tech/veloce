@@ -49,6 +49,11 @@ export const USERS = [
   { id: seedId('user:tomas'), firmId: MERIDIAN, email: 'tomas@meridian.example', fullName: 'Tomás Ferreira', role: 'ops' as const, desk: 'Middle Office' },
   { id: seedId('user:ingrid'), firmId: MERIDIAN, email: 'ingrid@meridian.example', fullName: 'Ingrid Sørensen', role: 'compliance' as const, desk: 'Risk & Compliance' },
   { id: seedId('user:alex'), firmId: MERIDIAN, email: 'alex@meridian.example', fullName: 'Alex Kim', role: 'admin' as const, desk: 'Platform Operations' },
+  // HALCYON ops user — rfq:0139 (awarded, HALCYON-owned) needs an ops caller
+  // in its tenant for the /ops Generate-handoff affordance to be reachable.
+  // Without this user the awarded HALCYON trade is dead UI for every other
+  // seed user (all MERIDIAN).
+  { id: seedId('user:priya'), firmId: HALCYON, email: 'priya@halcyon.example', fullName: 'Priya Krishnan', role: 'ops' as const, desk: 'Middle Office' },
 ];
 
 // --------------------------------------------------------------- panels
