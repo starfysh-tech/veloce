@@ -9,3 +9,7 @@ next-env.d.ts
 .vercel
 .env*
 *.env
+
+# Claude Code — per-developer local state, not shared
+.claude/settings.local.json
+.claude/worktrees/
