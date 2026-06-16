@@ -31,7 +31,7 @@ complicated and broken.** When a block surfaces a new decision, capture it in
 | --- | --- |
 | A — Create-RFQ + invitations | shipped (PR #1) |
 | B — Approval workspace | shipped (PR #3) |
-| C — Ops / STP | not started |
+| C — Ops / STP | shipped (branch `feat/block-c-ops-stp`) |
 | D — Compliance | not started |
 | E — Admin | not started |
 | F — Attachments | not started |

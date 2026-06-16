@@ -191,3 +191,37 @@ localized to actions.ts + builder defensiveness.
    (`app/(app)/ops/actions.ts`).
 5. `feat(ops): /ops route + UI` (page + client component).
 6. (deferred) — no schema migration; no nav change.
+
+## Shipped (2026-06-16) — branch `feat/block-c-ops-stp`, 6 commits
+
+Test count: **85** (was 63 after Block B, +22 new).
+
+| Commit | Scope |
+|--------|-------|
+| `2577e7f` | docs: /vr validation results folded into this spec |
+| `8b97f60` | `feat(stp)`: `lib/stp.ts` pure FpML builder + `lib/handoff-ref.ts` (11 tests; import-allowlist enforces no transmission) |
+| `9b0e649` | `feat(seed)`: backfill trades for `rfq:0139` + trades/handoff/open exception for `rfq:0138` so `/ops` has lifecycle on first load |
+| `ac98d21` | `feat(ops)`: `lib/queries/ops.ts` — tenant-scoped reads, 2 generated-SQL tests |
+| `99bdea9` | `feat(ops)`: `app/(app)/ops/actions.ts` — 4 server actions (generate/advance/openException/closeException), 9 input-gate tests |
+| `50c1305` | `feat(ops)`: `/ops` page + client component |
+
+All /vr critical fixes landed:
+
+- **C1** — `closeException` tenant-scopes via `handoffs → rfqs` join and a defense-in-depth tenant predicate in the conditional UPDATE (`app/(app)/ops/actions.ts:248`).
+- **C2** — `generateHandoff` throws `'No trades to hand off — approve the award first.'` when called on an awarded RFQ with zero trade rows (`actions.ts:73`).
+- **C3** — `advanceHandoff` asserts `updatedTrades.length === tradeIds.length` and `[updatedHandoff]` truthy; partial drift throws `'Handoff state drifted — refresh and try again.'` (`actions.ts:172, 178`).
+- **C4** — `buildStpPayload` throws when a firm has neither LEI nor shortCode rather than emitting `LEI-UNKNOWN` (`lib/stp.ts:78`).
+
+All cautions folded in:
+
+- Trade update predicate is `eq(trades.rfqId, …) AND eq(trades.status, expected)`; `trades` has no firmId column (A1, A2).
+- All-affirmed RFQ flip throws on drift inside the tx, rolls back the trade-affirm rather than silently committing against an inconsistent rfq (A3).
+- `lib/stp.ts` purity asserted via import-allowlist (`expect(importLines).toEqual([])`) plus belt-and-suspenders source greps for `fetch`/`XMLHttpRequest`/`Resend`/`node:http`/external HTTP clients (A4).
+- Seed cleanup relies on the existing `rfqs` delete; handoffs and handoff_exceptions cascade via FK (A5).
+- Tests landed per commit, not batched (A6).
+
+Deferred (per /vr):
+
+- No migration 0003 — `handoffs.ref` left unindexed; collision risk at pilot scale is ~ 0. Add a unique index later if real volume warrants.
+- Live-DB validator script for concurrency (mirror `scripts/validate-block-b.ts`) — recommended before merge but not blocking.
+- D-3 "dealer leak" claim in §5 above appears miscategorized: `notifyAuctionClosed` and `notifyAwardApproved` both send to `rfq.requester.email` (buy-side), not dealers. The only dealer-facing email (`sendInvitation`) already uses `publicRef`. Confirm with Randall, then strike §5.
