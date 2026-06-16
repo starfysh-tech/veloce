@@ -33,12 +33,6 @@ clean, lint clean). Note the following before building:
    `trade_status`/`handoff_status`/`event_type` at `30`/`33`/`43`; `recordEvent`
    `lib/record-event.ts:39`. `recommendAwardAction` moved to
    `app/(app)/rfqs/[id]/actions.ts:22` (was `:13`).
-5. **Open carryover bug — D-3 leak still unfixed.** It was folded into Block B and did NOT
-   get done. `notifyAwardApproved` and `notifyAuctionClosed` (`lib/email.ts:57,60,76,79`)
-   still email the internal sequence `rfq.ref` (`VEL-2026-…`) to dealers. Fix = swap
-   `rfq.ref` → `rfq.publicRef` in both functions. Pick it up here or as a standalone fix,
-   but it should stop slipping.
-
 Verify-but-likely-fine: Block B's `approveAward` bulk-closes ALL open rows in the compliance
 `exceptions` table for an RFQ (no `kind` filter). Block C's exceptions live in the separate
 `handoff_exceptions` table, so they should be unaffected — confirm before relying on it.
@@ -162,10 +156,11 @@ localized to actions.ts + builder defensiveness.
 - **N4 — `rfq.status` writers.** Block C is the first writer of `in_stp` and
   `affirmed` (no prior code touches these). Lazy sweep (`lib/auction-status.ts:51`)
   only flips `live → under_review`; no race with Block C transitions.
-- **N5 — D-3 'dealer leak' (handoff doc §5) appears miscategorized.**
-  `notifyAuctionClosed` (`lib/email.ts:49`) and `notifyAwardApproved` (`:68`)
-  send to `rfq.requester.email` (buy-side), not dealers. Skipped from Block C.
-  Confirm with Randall before deleting the §5 note.
+- **N5 — D-3 'dealer leak' note struck.** The original §5 claim that
+  `notifyAwardApproved` / `notifyAuctionClosed` emailed dealers was wrong:
+  both send to `rfq.requester.email` (buy-side) — verified at
+  `lib/email.ts:49,68`. The only dealer-facing email (`sendInvitation`)
+  already uses `publicRef`. §5 removed from the corrections section.
 
 ### Plan revisions (folded into "Build" section below)
 
@@ -223,5 +218,4 @@ All cautions folded in:
 Deferred (per /vr):
 
 - No migration 0003 — `handoffs.ref` left unindexed; collision risk at pilot scale is ~ 0. Add a unique index later if real volume warrants.
-- Live-DB validator script for concurrency (mirror `scripts/validate-block-b.ts`) — recommended before merge but not blocking.
-- D-3 "dealer leak" claim in §5 above appears miscategorized: `notifyAuctionClosed` and `notifyAwardApproved` both send to `rfq.requester.email` (buy-side), not dealers. The only dealer-facing email (`sendInvitation`) already uses `publicRef`. Confirm with Randall, then strike §5.
+- Reconcile-rfq-status sweep for the rare corner where all handoffs affirm and an exception opens between the in-tx checks (rfq sits at `in_stp` with no open exceptions). Out of Block C scope; would be a standalone reconciliation pass.
