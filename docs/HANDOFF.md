@@ -132,9 +132,9 @@ helper (`lib/policy.ts`, 30 tests); concentration helper (`lib/queries/concentra
 4 tests); approvals queue + detail reads (`lib/queries/approvals.ts`, 3 tests); approve/
 reject/clarify server actions (`app/(app)/approvals/actions.ts`, 8 input-gate tests);
 the `/approvals` UI; `lib/env.ts` (replaces silent `process.env.X!` casts in supabase
-+ middleware); Supabase clients; caller resolution + dealer-token resolver
+and middleware); Supabase clients; caller resolution + dealer-token resolver
 (`lib/auth/caller.ts`); seed (`db/seed.ts`, `db/seed-data.ts`, includes a seeded award
-+ open exception for `rfq:0141`); login (password + magic-link); RFQ blotter; RFQ
+and an open exception for `rfq:0141`); login (password + magic-link); RFQ blotter; RFQ
 detail with quote board, single-vs-blended comparison, Realtime-signal refetch, and
 `recommendAward`; lazy sweep; Resend wrapper (`lib/email.ts`); dealer `/quote/[token]`.
 
