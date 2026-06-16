@@ -6,8 +6,8 @@
    ========================================================================== */
 
 :root {
-  --font-ui: 'IBM Plex Sans', -apple-system, 'Segoe UI', sans-serif;
-  --font-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  --font-ui: var(--font-plex-sans), -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, 'SF Mono', Menlo, monospace;
   --r-sm: 6px; --r-md: 10px; --r-lg: 14px;
   --accent: #4d7dfb;
   --green: #2eb67d; --amber: #e2a33b; --red: #e25c6a; --teal: #2ba8bd; --purple: #9a7bff;

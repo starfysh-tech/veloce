@@ -158,7 +158,7 @@ export function QuoteBoardLive({
                   <div className="note" style={{ textTransform: 'uppercase', letterSpacing: '0.08em' }}>Blended vs best single bank</div>
                   <div className="d-big">−{comparison.savings.bps.toFixed(1)} bps <span style={{ fontSize: 14 }}>· saves {fmtMoneyFull(comparison.savings.minor, ccy)}</span></div>
                   <div className="note" style={{ marginTop: 6, color: 'var(--text)' }}>
-                    Dealers willing to take part of the size quote tighter than full-size levels. Synchronized competition stacks those partials until 100% is covered — liquidity an email process can't aggregate.
+                    Dealers willing to take part of the size quote tighter than full-size levels. Synchronized competition stacks those partials until 100% is covered — liquidity an email process can&apos;t aggregate.
                   </div>
                 </div>
               )}
