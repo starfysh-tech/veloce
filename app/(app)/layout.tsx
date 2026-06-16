@@ -25,6 +25,7 @@ const NAV: Record<string, { href: string; label: string; icon: string }[]> = {
   ],
   admin: [
     { href: '/rfqs', label: 'RFQs', icon: 'list' },
+    { href: '/compliance', label: 'Best Execution', icon: 'shield' },
     { href: '/admin', label: 'Administration', icon: 'gear' },
   ],
 };

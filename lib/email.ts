@@ -54,10 +54,10 @@ export async function notifyAuctionClosed(rfqId: string) {
   if (!rfq?.requester?.email) return;
   await send(
     rfq.requester.email,
-    `Auction closed: ${rfq.ref}`,
+    `Auction closed: ${rfq.publicRef}`,
     `<div style="font-family:system-ui,sans-serif;max-width:520px">
       <h2 style="margin:0 0 4px">Auction window closed</h2>
-      <p style="color:#555">${rfq.ref} — ${rfq.title}</p>
+      <p style="color:#555">${rfq.publicRef} — ${rfq.title}</p>
       <p>The quote board is final. Review responses and construct an award.</p>
       <p><a href="${SITE}/rfqs/${rfq.id}" style="display:inline-block;background:#4d7dfb;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:600">Open RFQ</a></p>
     </div>`,
@@ -73,10 +73,10 @@ export async function notifyAwardApproved(rfqId: string) {
   if (!rfq?.requester?.email) return;
   await send(
     rfq.requester.email,
-    `Award approved: ${rfq.ref}`,
+    `Award approved: ${rfq.publicRef}`,
     `<div style="font-family:system-ui,sans-serif;max-width:520px">
       <h2 style="margin:0 0 4px">Award approved</h2>
-      <p style="color:#555">${rfq.ref} — ${rfq.title}</p>
+      <p style="color:#555">${rfq.publicRef} — ${rfq.title}</p>
       <p>The Treasury Committee approved the award. Trades are captured and queued for STP.</p>
       <p><a href="${SITE}/rfqs/${rfq.id}" style="display:inline-block;background:#2eb67d;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:600">View award</a></p>
     </div>`,

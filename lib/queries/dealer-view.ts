@@ -15,13 +15,10 @@ import { rfqs, quotes, firms } from '@/db/schema';
 import { effectiveStatus } from '@/lib/auction-status';
 import type { Caller } from '@/lib/auth/caller';
 
-export async function getDealerView(caller: Caller, rfqId: string) {
-  if (caller.kind !== 'dealer' || caller.rfqId !== rfqId) return null;
-
-  // Select only presentational instrument fields — no firmId, no requesterId.
-  const rfqRow = await db
+export function dealerViewRfqQuery(rfqId: string) {
+  return db
     .select({
-      id: rfqs.id, ref: rfqs.ref, publicRef: rfqs.publicRef, title: rfqs.title, product: rfqs.product,
+      id: rfqs.id, publicRef: rfqs.publicRef, title: rfqs.title, product: rfqs.product,
       side: rfqs.side, underlying: rfqs.underlying, refLevel: rfqs.refLevel,
       strike: rfqs.strike, expiry: rfqs.expiry, style: rfqs.style, tenor: rfqs.tenor,
       notionalMinor: rfqs.notionalMinor, ccy: rfqs.ccy, notionalLabel: rfqs.notionalLabel,
@@ -31,6 +28,13 @@ export async function getDealerView(caller: Caller, rfqId: string) {
     .from(rfqs)
     .where(eq(rfqs.id, rfqId))
     .limit(1);
+}
+
+export async function getDealerView(caller: Caller, rfqId: string) {
+  if (caller.kind !== 'dealer' || caller.rfqId !== rfqId) return null;
+
+  // Select only presentational instrument fields — no firmId, no requesterId.
+  const rfqRow = await dealerViewRfqQuery(rfqId);
 
   const rfq = rfqRow[0];
   if (!rfq) return null;

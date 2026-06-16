@@ -144,9 +144,12 @@ quote board, single-vs-blended comparison, Realtime-signal refetch, and
 Block C: pure FpML payload builder and handoff ref (`lib/stp.ts` and `lib/handoff-ref.ts`,
 11 tests, import-allowlist enforced); ops queries (`lib/queries/ops.ts`, 2 generated-SQL
 tests); generate/advance/openException/closeException server actions
-(`app/(app)/ops/actions.ts`, 9 input-gate tests); the `/ops` UI.
+(`app/(app)/ops/actions.ts`, 9 input-gate tests); the `/ops` UI; Block D compliance
+workspace (`/compliance`) for compliance/admin, read-only best-ex JSON export, tenant-scoped
+compliance queries (`lib/queries/compliance.ts`, 5 generated-SQL tests), D-3 public-ref fixes
+in email and dealer token view, and a repo ESLint config for non-interactive lint validation.
 
-Test count after Block C: **85 tests** across `npm test`.
+Test count after Block D: **91 tests** across `npm test`.
 
 ## Remaining blocks (each independently shippable)
 
@@ -155,12 +158,12 @@ Test count after Block C: **85 tests** across `npm test`.
 | ~~**A**~~ | ~~Create-RFQ wizard + dealer invitations~~ | shipped PR #1 | `/rfqs/new` |
 | ~~**B**~~ | ~~Approval workspace + threshold enforcement~~ | shipped PR #3 | `/approvals` |
 | ~~**C**~~ | ~~Ops / STP workspace~~ | shipped (branch `feat/block-c-ops-stp`) | `/ops` |
-| **D** | Compliance / best-execution workspace | `_legacy/views/Compliance.jsx` | `/compliance` |
+| ~~**D**~~ | ~~Compliance / best-execution workspace~~ | shipped (current branch) | `/compliance` |
 | **E** | Admin workspace (read-only) | `_legacy/views/Admin.jsx` | `/admin` |
 | **F** | Attachments via Supabase Storage | new infra surface | create-RFQ + RFQ detail |
 | **G** | Role-specific dashboards (polish, ship last) | `_legacy/views/Dashboard.jsx` | per-role landing |
 
-Priority next: D → E → F → G. Commit incrementally (one logical commit per
+Priority next: E → F → G. Commit incrementally (one logical commit per
 piece). Every mutation through `recordEvent()`. Every read tenant- or token-scoped.
 Run `npm test` and `npx tsc --noEmit` before each commit.
 
@@ -171,7 +174,7 @@ Run `npm test` and `npx tsc --noEmit` before each commit.
 - Masking holds on any new dealer-facing surface.
 - Money stays integer/numeric (cents); never floats.
 - `pages fetch, client components interact` respected.
-- `npm test` and `npx tsc --noEmit` pass.
+- `npm test`, `npx tsc --noEmit`, and `npm run lint` pass.
 - Block matches its locked decisions.
 
 New dealer-facing or Storage-access surfaces get the same stop-ship scrutiny as the
