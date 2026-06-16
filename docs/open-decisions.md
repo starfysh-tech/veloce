@@ -112,17 +112,107 @@ shape differs from what those entries describe.
   structurally impossible without savepoints. The walked-back shape is also
   simpler — one-shot with a single backstop instead of a retry loop.
 
+## Block B — accepted MVP gaps + walkbacks (post-merge, 2026-06-16)
+
+Block B shipped in PR #3 with the following deliberate gaps. Each is logged here
+so future blocks can revisit; none block the demo loop.
+
+- **`notifyAwardApproved` email failure invisible.** Same shape as Block A's
+  email gap. Approve commits successfully, then fires `notifyAwardApproved`
+  fire-and-forget (`app/(app)/approvals/actions.ts:215`). If Resend is down,
+  the requester isn't told the award was approved. **Remediation path:** when
+  the broader email outbox / retry is built (cross-cutting), both Block A and
+  Block B inherit it.
+
+- **`exception_opened` and `exception_closed` enum values reserved-but-unused.**
+  Per the plan's "Audit shape" decision, recommend + approve each emit ONE
+  aggregate event (`award_recommended` / `award_approved`) whose `detail`
+  carries `openedExceptionRef` or `closedExceptionRefs`. The two enum values
+  exist in the `event_type` enum (`db/schema.ts:50`) but no writer uses them.
+  Mirrors D-1's walkback shape (one aggregate event, rich detail). If
+  per-exception event rows are wanted later, the enum is ready.
+
+- **`exceptions.status` is free-form text + `exceptions.open` boolean.**
+  Block B writes one of `'open' | 'acknowledged' | 'closed'` via the
+  `ExceptionStatus` TS union exported from `lib/policy.ts`. No pgEnum
+  migration — Block D may promote to a Postgres enum later if it wants
+  RLS-level enforcement. The `open` boolean and `status` text overlap (`open
+  = (status === 'open')`); Block B does not enforce that invariant at the DB
+  level.
+
+- **`nextExceptionRef` (firm-scoped `EX-YYYY-NNNN`) has a SELECT-MAX+1 race.**
+  Two concurrent recommends in the same firm can both observe `max_seq = N`,
+  both write `EX-YYYY-(N+1)`; the `exceptions_firm_ref_uniq` index aborts the
+  second tx. The losing recommend then loses its award too — not just the
+  exception row. Documented as "astronomically rare" in
+  `lib/exception-ref.ts`; under real load this becomes "merely rare". A
+  Postgres sequence would be the durable fix.
+
+- **Concentration "drift since recommend" check is best-effort.** The check
+  inside the approve tx re-fetches the snapshot then compares against
+  `award.flags`. If the concentration moved enough that a NEW warn flag
+  would emerge, approve throws and asks the trader to re-recommend. But the
+  check only looks at "is there a flag now that wasn't there at recommend"
+  — it does not detect "concentration went down" or "flagged dealer now
+  35.1% vs recommend's 36.0%". For the pilot's threshold-trip-on-change
+  semantics this is fine.
+
+- **>$250M committee gate is single-approver-plus-note** per Decision 21.
+  Block B enforces a ≥20-char trimmed note server-side and shows the
+  "two-person committee required" banner client-side, but does not actually
+  require a second distinct approver. Documented pilot gap; Block D may
+  layer real two-approver enforcement.
+
+- **Re-recommend after a reject erases history of prior recommend's flags.**
+  `awards_rfq_uniq` index means there's at most one `awards` row per RFQ.
+  After reject → under_review → re-recommend, the second recommend would
+  fail on the unique constraint (the prior recommend's `awards` row is
+  still there). The current shape: reject doesn't delete the award row, so
+  re-recommend is blocked. Either reject should `tx.delete(awards)` for
+  the rfq, or recommend should `tx.update` on conflict. Either way is a
+  follow-up.
+
+## Block B — implementation walkbacks
+
+- **Concentration snapshot moved inside `apply(tx)`.** The plan said
+  "snapshot before opening the tx" relying on the conditional UPDATE's rfq
+  row lock to prevent drift. /vr surfaced that the lock prevents
+  concurrent approvals on the SAME rfq but NOT concurrent approvals on
+  OTHER rfqs in the same firm (which can also commit trades that move
+  concentration). The shipped code calls `getDealerConcentration(firmId,
+  asOf, tx)` inside `apply(tx)` after the conditional UPDATE returns. The
+  concentration helper accepts an optional executor (`db | Tx`) to make
+  this work.
+
+- **`StaleApprovalError` is a sentinel-string error, not a class.** The
+  plan called for a typed error class. Next's `'use server'` boundary
+  forbids non-async exports from action files, so the shipped form is a
+  factory + sentinel message; the client matches on the substring "no
+  longer awaiting approval". Same external behavior, different shape.
+
+- **`trades.ref` random, not firm-scoped sequence.** See D-6.
+
 ## Block-specific (resolve when the block starts)
 
-### D-6. Block B — `trades.ref` / `handoffs.ref` format
-On approve, Block B generates `trades` rows (each needs a `ref`). Seed has no trade
-refs to copy a format from. Propose `TRD-{rfqRef-suffix}-{dealerShortCode}` or
-similar. → decide at Block B.
+### D-6. Block B — `trades.ref` / `handoffs.ref` format — ✅ RESOLVED
+**Decision: random base32 via `lib/trade-ref.ts` (mirrors `lib/public-ref.ts`).**
+`T-` + 8 chars Crockford (no I/L/O/U) over 40 random bits — ~10^12 distinct values
+per call. Backed by `trades_ref_uniq` unique index. The Crockford encoder is shared
+by both `lib/public-ref.ts` and `lib/trade-ref.ts` via `lib/ref-base.ts`
+(`prefixedCrockfordRef(prefix)`).
 
-### D-7. Block D — concentration "real vs seeded"
-Decision 20 says compute for real off `trades`. With light seed data the numbers may
-look thin. Confirm: show real computed figures even if sparse (recommended), vs seed
-extra awarded trades to make the view look populated. → decide at Block D.
+Why not the originally-proposed firm-scoped `T-YYYY-NNNN` sequence: /vr surfaced
+that SELECT-MAX+1 has a TOCTOU race under concurrent approvals; a per-firm sequence
+also requires a `trades.firmId` denorm (trades currently joins through
+`rfqId → rfqs.firmId`). Random refs sidestep both.
+
+`handoffs.ref` deferred to Block C.
+
+### D-7. Block D — concentration "real vs seeded" — ✅ RESOLVED (at Block B)
+**Decision: real figures from `trades` even when sparse.** Block B already wires
+this end-to-end; Block D consumes the same `getDealerConcentration(firmId, asOf?,
+executor?)` helper (`lib/queries/concentration.ts`). USD-only with `TODO(multi-ccy)`,
+counts all `tradeStatus` values, scoped via `trades.rfqId → rfqs.firmId`.
 
 ### D-8. Block E — what (if anything) becomes editable
 Decision 22 is read-only admin with code comments marking future-editable sections.

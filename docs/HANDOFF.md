@@ -110,32 +110,49 @@ Each rule gets a unit test.
 | Pattern | Use it as the template for | File |
 | --- | --- | --- |
 | `recommendAwardAction` | Any `recordEvent()` mutation | `app/(app)/rfqs/[id]/actions.ts:13` |
+| `approveAward` / conditional UPDATE | Concurrency-safe state flip inside a tx | `app/(app)/approvals/actions.ts` |
+| `lib/policy.ts` | Pure threshold rules + `AwardFlag` with stable sha1 id | `lib/policy.ts` |
+| `getDealerConcentration` | Cross-tx-safe query taking optional `db \| tx` executor | `lib/queries/concentration.ts` |
 | `getBoard` / `maskBoard` | Tenant-scoped + masked read | `lib/queries/board.ts`, `lib/auth/mask.ts` |
+| `getApprovalQueue` / `getApprovalDetail` | Tenant-scoped queue + detail read with generated-SQL tests | `lib/queries/approvals.ts` |
+| `getRfqFirmIdOrThrow` | Pre-tx tenant gate before `recordEvent` | `lib/queries/rfqs.ts` |
+| `allocNotionalMinor` | Per-allocation BigInt half-up rounding | `lib/award-math.ts` |
+| `prefixedCrockfordRef` | Short collision-resistant random refs (RFQ-, T-) | `lib/ref-base.ts` |
+| `nextExceptionRef` | Firm-scoped sequence (`EX-YYYY-NNNN`) in a tx | `lib/exception-ref.ts` |
+| `requireEnv` (server) | Loud failure for missing env on server side | `lib/env.ts` |
 | Dealer `/quote/[token]` | Token-scoped, no-leak surface | `app/quote/[token]/` |
 | `sweepIfExpired` | Lazy state flip on read | `lib/auction-status.ts` |
 | `rfqListQuery` | Tenant-scoped list read | `lib/queries/rfqs.ts:29` |
 | Role-aware nav | Where new routes plug in | `app/(app)/layout.tsx:9` |
+| `scripts/validate-block-b.ts` | One-shot post-state validator pattern | `scripts/` |
 
-Also built: schema (`db/schema.ts`, 14 tables) + migration; `recordEvent()`; award
-math + tests; masking projection + tests (17 tests total, `npm test`); Supabase
-clients; caller resolution + dealer-token resolver (`lib/auth/caller.ts`); seed
-(`db/seed.ts`, `db/seed-data.ts`); login (password + magic-link); RFQ blotter; RFQ
+Also built: schema (`db/schema.ts`, 14 tables) + migrations 0001–0002; `recordEvent()`;
+award math + tests; masking projection + tests; Block B threshold rules + projection
+helper (`lib/policy.ts`, 30 tests); concentration helper (`lib/queries/concentration.ts`,
+4 tests); approvals queue + detail reads (`lib/queries/approvals.ts`, 3 tests); approve/
+reject/clarify server actions (`app/(app)/approvals/actions.ts`, 8 input-gate tests);
+the `/approvals` UI; `lib/env.ts` (replaces silent `process.env.X!` casts in supabase
+and middleware); Supabase clients; caller resolution + dealer-token resolver
+(`lib/auth/caller.ts`); seed (`db/seed.ts`, `db/seed-data.ts`, includes a seeded award
+and an open exception for `rfq:0141`); login (password + magic-link); RFQ blotter; RFQ
 detail with quote board, single-vs-blended comparison, Realtime-signal refetch, and
 `recommendAward`; lazy sweep; Resend wrapper (`lib/email.ts`); dealer `/quote/[token]`.
+
+Test count after Block B: **63 tests** across `npm test`.
 
 ## Remaining blocks (each independently shippable)
 
 | Block | Scope | POC view | Route(s) |
 | --- | --- | --- | --- |
-| **A** | Create-RFQ wizard + dealer invitations (closes the loop) | `_legacy/views/Wizard.jsx` | `/rfqs/new` |
-| **B** | Approval workspace + threshold enforcement | `_legacy/views/Approvals.jsx` | `/approvals` |
+| ~~**A**~~ | ~~Create-RFQ wizard + dealer invitations~~ | shipped PR #1 | `/rfqs/new` |
+| ~~**B**~~ | ~~Approval workspace + threshold enforcement~~ | shipped PR #3 | `/approvals` |
 | **C** | Ops / STP workspace | `_legacy/views/Ops.jsx` | `/ops` |
 | **D** | Compliance / best-execution workspace | `_legacy/views/Compliance.jsx` | `/compliance` |
 | **E** | Admin workspace (read-only) | `_legacy/views/Admin.jsx` | `/admin` |
 | **F** | Attachments via Supabase Storage | new infra surface | create-RFQ + RFQ detail |
 | **G** | Role-specific dashboards (polish, ship last) | `_legacy/views/Dashboard.jsx` | per-role landing |
 
-Priority: A → B → C → D → E → F → G. Commit incrementally (one logical commit per
+Priority next: C → D → E → F → G. Commit incrementally (one logical commit per
 piece). Every mutation through `recordEvent()`. Every read tenant- or token-scoped.
 Run `npm test` and `npx tsc --noEmit` before each commit.
 
