@@ -8,18 +8,6 @@ import { Pill, Icon, fmtMoneyFull, fmtPrice } from '@/components/ui';
 import { generateHandoff, advanceHandoff, openException, closeException } from './actions';
 import type { OpsTradeRow, OpsHandoffRow } from '@/lib/queries/ops';
 
-const TRADE_PILL_CLS: Record<OpsTradeRow['status'], string> = {
-  captured: 'pill-draft',
-  sent: 'pill-stp',
-  matched: 'pill-review',
-  affirmed: 'pill-affirmed',
-};
-const HANDOFF_PILL_CLS: Record<OpsHandoffRow['status'], string> = {
-  sent: 'pill-stp',
-  matched: 'pill-review',
-  affirmed: 'pill-affirmed',
-};
-
 type EligibleHandoff = {
   rfqId: string;
   rfqRef: string;
@@ -124,9 +112,7 @@ export default function OpsClient({
                   <td className="num t-strong">{fmtPrice(t.price, t.priceUnit)}</td>
                   <td className="t-muted">{t.settle ?? '—'}</td>
                   <td className="mono t-faint" style={{ fontSize: 10.5 }}>{t.uti ?? '—'}</td>
-                  <td>
-                    <span className={`pill ${TRADE_PILL_CLS[t.status]}`}>{t.status}</span>
-                  </td>
+                  <td><Pill status={t.status} /></td>
                 </tr>
               ))}
             </tbody>
@@ -155,7 +141,7 @@ export default function OpsClient({
                     <div style={{ flex: 1, minWidth: 200 }}>
                       <div className="row" style={{ gap: 8 }}>
                         <span className="mono t-strong">{h.handoffRef}</span>
-                        <span className={`pill ${HANDOFF_PILL_CLS[h.status]}`}>{h.status}</span>
+                        <Pill status={h.status} />
                       </div>
                       <div className="t-faint" style={{ marginTop: 3 }}>
                         {h.publicRef} · {h.rfqTitle} · {h.legs.length} leg{h.legs.length === 1 ? '' : 's'} ·{' '}

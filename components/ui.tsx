@@ -26,7 +26,10 @@ export function Icon({ name, size = 16, style }: { name: string; size?: number; 
   );
 }
 
-// rfq_status enum → display label + pill class.
+// Status → display label + pill class. Covers all three lifecycle enums
+// (rfq_status, trade_status, handoff_status). The enums share three keys —
+// `sent`, `matched`, `affirmed` — which all want the same display, so a
+// single map is sufficient. `captured` is trade-only; the rest are rfq-only.
 const STATUS_DISPLAY: Record<string, { label: string; cls: string }> = {
   draft: { label: 'Draft', cls: 'pill-draft' },
   live: { label: 'Live', cls: 'pill-live' },
@@ -36,6 +39,9 @@ const STATUS_DISPLAY: Record<string, { label: string; cls: string }> = {
   in_stp: { label: 'In STP', cls: 'pill-stp' },
   affirmed: { label: 'Affirmed', cls: 'pill-affirmed' },
   cancelled: { label: 'Cancelled', cls: 'pill-exception' },
+  captured: { label: 'Captured', cls: 'pill-draft' },
+  sent: { label: 'Sent', cls: 'pill-stp' },
+  matched: { label: 'Matched', cls: 'pill-review' },
 };
 
 export function Pill({ status }: { status: string }) {
