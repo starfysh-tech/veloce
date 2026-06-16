@@ -5,9 +5,20 @@
 'use client';
 import { createBrowserClient } from '@supabase/ssr';
 
+// Next.js statically replaces `process.env.NEXT_PUBLIC_*` at build time, but
+// only for *literal* property access — dynamic access like `process.env[name]`
+// (what lib/env.ts:requireEnv does) returns undefined in the browser bundle
+// because `process.env` is stubbed to {}. So this file uses the literal form
+// directly; lib/env.ts is still used on the server side where dynamic access
+// works.
 export function createClient() {
-  return createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  );
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !anonKey) {
+    throw new Error(
+      'Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY in the client bundle. ' +
+        'These must be set at build time, not just runtime.',
+    );
+  }
+  return createBrowserClient(url, anonKey);
 }
