@@ -15,9 +15,21 @@ export type DealerConcentration = Record<
   }
 >;
 
+// `db` and a transaction handle share the drizzle query API but are distinct
+// types (`$client` lives only on the top-level db). The query builder only
+// needs `.select/.from/...`, so accept either via this union. Callers inside a
+// `recordEvent` apply(tx) pass `tx` to read committed-as-of-now state without
+// the inter-RFQ drift window that an outer `db` snapshot would have.
+type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
+type Executor = typeof db | Tx;
+
 // Exported so the generated SQL can be asserted in a unit test without a DB —
 // see concentration.test.ts (mirrors lib/queries/rfqs.test.ts pattern).
-export function dealerConcentrationQuery(firmId: string, asOf?: Date) {
+export function dealerConcentrationQuery(
+  firmId: string,
+  asOf?: Date,
+  executor: Executor = db,
+) {
   // `gte(..., sql<window>)` — Postgres computes `now() - INTERVAL '90 days'`
   // (or the bound `asOf - INTERVAL '90 days'`) once per row predicate. Pushing
   // the math into SQL keeps the predicate index-friendly on `trades.created_at`.
@@ -26,7 +38,7 @@ export function dealerConcentrationQuery(firmId: string, asOf?: Date) {
     : sql`now() - INTERVAL '90 days'`;
   const windowEnd = asOf ? sql`${asOf.toISOString()}::timestamptz` : sql`now()`;
 
-  return db
+  return executor
     .select({
       dealerFirmId: trades.dealerFirmId,
       notionalMinor: sum(trades.allocNotionalMinor).mapWith(Number),
@@ -49,8 +61,9 @@ export function dealerConcentrationQuery(firmId: string, asOf?: Date) {
 export async function getDealerConcentration(
   firmId: string,
   asOf?: Date,
+  executor: Executor = db,
 ): Promise<DealerConcentration> {
-  const rows = await dealerConcentrationQuery(firmId, asOf);
+  const rows = await dealerConcentrationQuery(firmId, asOf, executor);
   return aggregateToShareBps(rows);
 }
 

@@ -9,7 +9,7 @@ import { db } from '@/db';
 import { rfqs, quotes, awards, exceptions, firms } from '@/db/schema';
 import { resolveUser } from '@/lib/auth/caller';
 import { recordEvent } from '@/lib/record-event';
-import { bestSingle, bestBlended, savings, toTicks, type QuoteLike } from '@/lib/award-math';
+import { bestSingle, bestBlended, savings, toTicks, allocNotionalMinor, type QuoteLike } from '@/lib/award-math';
 import {
   type AwardFlag,
   bestExDeviationFlag,
@@ -68,10 +68,10 @@ export async function recommendAwardAction(rfqId: string, mode: 'single' | 'blen
   const deviationNotes: string[] = [];
 
   for (const alloc of allocations) {
-    const allocNotionalMinor = Math.round((rfq.notionalMinor * alloc.pct) / 100);
+    const proposedNotionalMinor = allocNotionalMinor(rfq.notionalMinor, alloc.pct);
     const projected = projectConcentration(snapshot, {
       dealerFirmId: alloc.dealerFirmId,
-      proposedNotionalMinor: allocNotionalMinor,
+      proposedNotionalMinor,
     });
     const dealerShareBps = projected[alloc.dealerFirmId]?.shareBps ?? 0;
     const concFlag = concentrationFlag(dealerShareBps);

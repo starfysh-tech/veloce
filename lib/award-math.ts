@@ -28,6 +28,19 @@ export const toTicks = (price: string): number => Math.round(parseFloat(price) *
 export const fromTicks = (ticks: number): number => ticks / SCALE;
 
 /**
+ * Integer-exact per-allocation notional. Both rfqs.notionalMinor and
+ * trades.allocNotionalMinor are declared `bigint({ mode: 'number' })` so JS
+ * reads them as `number`; doing the math as `number * number / 100` is fine for
+ * MVP values but silently float-corrupts above `Number.MAX_SAFE_INTEGER`.
+ * Casting through BigInt keeps the multiply-then-divide integer-exact.
+ *
+ * Single source of truth — used by `recommendAwardAction` (flag/exception
+ * derivation) and `approveAward` (drift check + trade insert).
+ */
+export const allocNotionalMinor = (notionalMinor: number, pct: number): number =>
+  Number((BigInt(notionalMinor) * BigInt(pct)) / 100n);
+
+/**
  * Best single-bank award: lowest-priced quote that covers full size (pct=100).
  * Returns null if no dealer will take 100%.
  */

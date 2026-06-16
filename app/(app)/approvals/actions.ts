@@ -13,6 +13,7 @@ import { db } from '@/db';
 import { rfqs, awards, trades, exceptions } from '@/db/schema';
 import { resolveUser } from '@/lib/auth/caller';
 import { recordEvent } from '@/lib/record-event';
+import { allocNotionalMinor } from '@/lib/award-math';
 import {
   type AwardFlag,
   validateFlagAcks,
@@ -47,15 +48,13 @@ export async function approveAward(input: {
   }
   const { rfqId } = input;
 
-  // Re-snapshot concentration BEFORE opening the tx (read-only). The
-  // conditional UPDATE inside apply(tx) locks the rfq row, so the snapshot
-  // cannot drift in a way the projection inside the tx would miss. Calling
-  // getDealerConcentration with the tx is also fine; outside is the cleaner
-  // pattern since the helper is exported against `db`.
-  // NOTE: we re-fetch the rfq's firmId after the conditional update for the
-  // tenant check, but the snapshot is per-firm so we need it first. Look up
-  // the rfq's firmId once here; the conditional update inside the tx is the
-  // source of truth.
+  // Cheap pre-tx fetch of firmId — needed to build the EventInput before
+  // opening recordEvent. The TRUE tenant gate runs inside apply(tx) after the
+  // conditional UPDATE returns (line ~100); the concentration SNAPSHOT also
+  // runs inside the tx (line ~107) so it sees committed state at the moment
+  // the rfq row is locked, eliminating the inter-RFQ drift window an outer
+  // snapshot would have (other approvers can commit trades for the same firm
+  // between an outer snapshot and the conditional UPDATE).
   const rfqRow = await db
     .select({ firmId: rfqs.firmId })
     .from(rfqs)
@@ -63,7 +62,6 @@ export async function approveAward(input: {
     .limit(1);
   if (!rfqRow.length) throw new Error('RFQ not found.');
   if (rfqRow[0].firmId !== caller.firmId) throw new Error('Not your firm');
-  const snapshot = await getDealerConcentration(rfqRow[0].firmId, new Date());
 
   // Mutable detail object — recordEvent reads `event.detail` AFTER apply()
   // returns (lib/record-event.ts:44-57), so mutations inside apply() are
@@ -128,10 +126,16 @@ export async function approveAward(input: {
         }
       }
 
-      // 5. Re-evaluate concentration vs the snapshot taken pre-tx. If a NEW
-      // warn flag would emerge that is NOT already in award.flags (by id),
-      // concentration drifted since recommend — fail loudly and ask the
-      // trader to re-recommend.
+      // 5. Snapshot concentration INSIDE the tx so it sees committed state at
+      // the moment the rfq row is locked (READ COMMITTED). Then project each
+      // allocation independently. If a NEW warn flag would emerge that is NOT
+      // already in award.flags (by id), concentration drifted since recommend
+      // — fail loudly and ask the trader to re-recommend.
+      const snapshot = await getDealerConcentration(
+        updated.firmId,
+        new Date(),
+        tx,
+      );
       const allocations = award.allocations as Array<{
         dealerFirmId: string;
         pct: number;
@@ -139,12 +143,9 @@ export async function approveAward(input: {
       }>;
       const existingFlagIds = new Set(flags.map((f) => f.id));
       for (const alloc of allocations) {
-        const allocNotionalMinor = Math.round(
-          (updated.notionalMinor * alloc.pct) / 100,
-        );
         const projected = projectConcentration(snapshot, {
           dealerFirmId: alloc.dealerFirmId,
-          proposedNotionalMinor: allocNotionalMinor,
+          proposedNotionalMinor: allocNotionalMinor(updated.notionalMinor, alloc.pct),
         });
         const dealerShareBps =
           projected[alloc.dealerFirmId]?.shareBps ?? 0;
@@ -166,17 +167,15 @@ export async function approveAward(input: {
         })
         .where(eq(awards.id, award.id));
 
-      // 7. Insert one trade per allocation. allocNotionalMinor uses BigInt
-      // math to avoid float drift at large notionals (db/schema.ts:124, 231
-      // are both bigint mode:number).
+      // 7. Insert one trade per allocation. allocNotionalMinor() in
+      // lib/award-math.ts is the single source of truth for the BigInt math;
+      // see the comment there for why number * number / 100 isn't safe.
       const tradeRows = allocations.map((a) => ({
         ref: generateTradeRef(),
         rfqId,
         dealerFirmId: a.dealerFirmId,
         pct: a.pct,
-        allocNotionalMinor: Number(
-          (BigInt(updated.notionalMinor) * BigInt(a.pct)) / 100n,
-        ),
+        allocNotionalMinor: allocNotionalMinor(updated.notionalMinor, a.pct),
         ccy: updated.ccy,
         price: a.price,
         priceUnit: updated.quoteUnit,
