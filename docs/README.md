@@ -29,8 +29,8 @@ complicated and broken.** When a block surfaces a new decision, capture it in
 
 | Block | State |
 | --- | --- |
-| A — Create-RFQ + invitations | not started |
-| B — Approval workspace | not started |
+| A — Create-RFQ + invitations | shipped (PR #1) |
+| B — Approval workspace | shipped (PR #3) |
 | C — Ops / STP | not started |
 | D — Compliance | not started |
 | E — Admin | not started |
