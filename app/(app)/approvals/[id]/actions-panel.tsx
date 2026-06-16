@@ -43,13 +43,13 @@ type ActionKind = 'approve' | 'reject' | 'clarify';
 export function ApprovalActions({
   rfqId,
   firmName,
-  warnFlagIds,
+  warnFlags,
   requiresCommitteeNote,
   awardRefForToast,
 }: {
   rfqId: string;
   firmName: string;
-  warnFlagIds: string[];
+  warnFlags: Array<{ id: string; text: string }>;
   requiresCommitteeNote: boolean;
   awardRefForToast: string;
 }) {
@@ -62,7 +62,7 @@ export function ApprovalActions({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  const allAcked = warnFlagIds.every((id) => acked.has(id));
+  const allAcked = warnFlags.every((f) => acked.has(f.id));
   const noteOk =
     !requiresCommitteeNote || note.trim().length >= 20;
   const canApprove = allAcked && noteOk && !pending;
@@ -117,21 +117,22 @@ export function ApprovalActions({
       </p>
 
       {/* Warn-flag acknowledgements */}
-      {warnFlagIds.length > 0 && (
+      {warnFlags.length > 0 && (
         <>
-          <div className="s-label">Acknowledge warnings ({acked.size}/{warnFlagIds.length})</div>
+          <div className="s-label">Acknowledge warnings ({acked.size}/{warnFlags.length})</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 12 }}>
-            {warnFlagIds.map((id) => (
+            {warnFlags.map((f) => (
               <label
-                key={id}
-                style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 13 }}
+                key={f.id}
+                style={{ display: 'flex', gap: 8, alignItems: 'flex-start', fontSize: 13, lineHeight: 1.4 }}
               >
                 <input
                   type="checkbox"
-                  checked={acked.has(id)}
-                  onChange={() => toggleAck(id)}
+                  checked={acked.has(f.id)}
+                  onChange={() => toggleAck(f.id)}
+                  style={{ marginTop: 3 }}
                 />
-                <span className="mono t-faint">{id}</span>
+                <span>{f.text}</span>
               </label>
             ))}
           </div>

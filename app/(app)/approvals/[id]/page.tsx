@@ -63,9 +63,9 @@ export default async function ApprovalDetailPage({
     : [];
   const dealerNameById = new Map(dealerRows.map((d) => [d.id, d.name]));
 
-  const warnFlagIds = detail.award.flags
+  const warnFlags = detail.award.flags
     .filter((f) => f.severity === 'warn')
-    .map((f) => f.id);
+    .map((f) => ({ id: f.id, text: f.text }));
   const needsCommitteeNote = requiresCommitteeNote(detail.notionalMinor);
 
   const fmtSavingsDollars = (minor: number | null) =>
@@ -303,7 +303,7 @@ export default async function ApprovalDetailPage({
       <ApprovalActions
         rfqId={detail.rfqId}
         firmName={caller.label}
-        warnFlagIds={warnFlagIds}
+        warnFlags={warnFlags}
         requiresCommitteeNote={needsCommitteeNote}
         awardRefForToast={detail.rfqRef}
       />
