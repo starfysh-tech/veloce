@@ -80,14 +80,23 @@ export async function approveAward(input: {
       detail,
     },
     async (tx) => {
-      // 1. Conditional UPDATE — concurrency guard.
+      // 1. Conditional UPDATE — concurrency + tenant guard in one. firmId in
+      // the WHERE means a wrong-firm caller never even acquires the row lock;
+      // the pre-tx getRfqFirmIdOrThrow throws earlier with a clearer message,
+      // so reaching this with firmId mismatch is impossible — the predicate
+      // is defense-in-depth.
       const [updated] = await tx
         .update(rfqs)
         .set({ status: 'awarded' })
-        .where(and(eq(rfqs.id, rfqId), eq(rfqs.status, 'awaiting_approval')))
+        .where(
+          and(
+            eq(rfqs.id, rfqId),
+            eq(rfqs.status, 'awaiting_approval'),
+            eq(rfqs.firmId, caller.firmId),
+          ),
+        )
         .returning();
       if (!updated) throw staleApprovalError();
-      if (updated.firmId !== caller.firmId) throw new Error('Not your firm');
 
       // 2. Re-fetch the award.
       const awardRows = await tx
@@ -246,11 +255,11 @@ export async function rejectAward(input: { rfqId: string; reason: string }) {
           and(
             eq(rfqs.id, input.rfqId),
             eq(rfqs.status, 'awaiting_approval'),
+            eq(rfqs.firmId, caller.firmId),
           ),
         )
         .returning();
       if (!updated) throw staleApprovalError();
-      if (updated.firmId !== caller.firmId) throw new Error('Not your firm');
     },
   );
 
@@ -291,11 +300,11 @@ export async function requestClarification(input: {
           and(
             eq(rfqs.id, input.rfqId),
             eq(rfqs.status, 'awaiting_approval'),
+            eq(rfqs.firmId, caller.firmId),
           ),
         )
         .returning();
       if (!updated) throw staleApprovalError();
-      if (updated.firmId !== caller.firmId) throw new Error('Not your firm');
     },
   );
 

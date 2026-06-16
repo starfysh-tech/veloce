@@ -28,17 +28,24 @@ export const toTicks = (price: string): number => Math.round(parseFloat(price) *
 export const fromTicks = (ticks: number): number => ticks / SCALE;
 
 /**
- * Integer-exact per-allocation notional. Both rfqs.notionalMinor and
- * trades.allocNotionalMinor are declared `bigint({ mode: 'number' })` so JS
- * reads them as `number`; doing the math as `number * number / 100` is fine for
- * MVP values but silently float-corrupts above `Number.MAX_SAFE_INTEGER`.
- * Casting through BigInt keeps the multiply-then-divide integer-exact.
+ * Integer-exact per-allocation notional with banker's-style half-up rounding.
+ * Both rfqs.notionalMinor and trades.allocNotionalMinor are declared
+ * `bigint({ mode: 'number' })` so JS reads them as `number`; doing the math as
+ * `number * number / 100` is fine for MVP values but silently float-corrupts
+ * above `Number.MAX_SAFE_INTEGER`. Casting through BigInt keeps the product
+ * exact; we then half-up the final cent so the result matches `Math.round`
+ * for the values where Math.round is still safe (a plain BigInt `/ 100n`
+ * would floor and disagree on remainders ≥ 50 by 1 cent).
  *
  * Single source of truth — used by `recommendAwardAction` (flag/exception
  * derivation) and `approveAward` (drift check + trade insert).
  */
-export const allocNotionalMinor = (notionalMinor: number, pct: number): number =>
-  Number((BigInt(notionalMinor) * BigInt(pct)) / 100n);
+export const allocNotionalMinor = (notionalMinor: number, pct: number): number => {
+  const product = BigInt(notionalMinor) * BigInt(pct);
+  const div = product / 100n;
+  const rem = product % 100n;
+  return Number(rem >= 50n ? div + 1n : div);
+};
 
 /**
  * Best single-bank award: lowest-priced quote that covers full size (pct=100).
