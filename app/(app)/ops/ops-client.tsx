@@ -2,7 +2,7 @@
 // Pure client component: data flows in as props from page.tsx; mutations call
 // the server actions which re-fetch via router.refresh() on success.
 'use client';
-import React, { useState, useTransition } from 'react';
+import React, { useEffect, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Pill, Icon, fmtMoneyFull, fmtPrice } from '@/components/ui';
 import { generateHandoff, advanceHandoff, openException, closeException } from './actions';
@@ -47,6 +47,17 @@ export default function OpsClient({
   const preview = previewHandoffId
     ? handoffs.find((h) => h.handoffId === previewHandoffId) ?? null
     : null;
+
+  // Close payload modal on ESC. Backdrop click already handles mouse; this
+  // covers keyboard-only users.
+  useEffect(() => {
+    if (!previewHandoffId) return;
+    const onKey = (ev: KeyboardEvent) => {
+      if (ev.key === 'Escape') setPreviewHandoffId(null);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [previewHandoffId]);
 
   return (
     <>

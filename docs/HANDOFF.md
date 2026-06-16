@@ -27,7 +27,7 @@ decision blocks you, surface it rather than working around it.**
    a fallback (not yet built).
 3. **Multi-tenant schema, single-tenant operation.** Every business row carries
    `firmId`; every query is tenant-scoped. No tenant-management UI.
-4. **Vercel-native.** Next.js App Router, route handlers + server actions as the
+4. **Vercel-native.** Next.js App Router, route handlers and server actions as the
    API. No separate backend service.
 5. **Supabase platform + Drizzle access.** All writes and sensitive reads go
    through server route handlers / actions on a service-role or RLS-backed
@@ -127,21 +127,21 @@ Each rule gets a unit test.
 | `scripts/validate-block-b.ts` | One-shot post-state validator pattern | `scripts/` |
 | `buildStpPayload` | Pure server-side payload builder, import-allowlist tested | `lib/stp.ts` |
 | `generateHandoff` / `advanceHandoff` | Conditional UPDATE + stale-state pattern on multi-table flips | `app/(app)/ops/actions.ts` |
-| `getRfqForHandoff` | Pre-tx tenant-scoped read that returns rfq + trades + firms map | `lib/queries/ops.ts` |
+| `getRfqForHandoff` | Pre-tx tenant-scoped read that returns rfq, trades, and firms map | `lib/queries/ops.ts` |
 
-Also built: schema (`db/schema.ts`, 14 tables) + migrations 0001–0002; `recordEvent()`;
-award math + tests; masking projection + tests; Block B threshold rules + projection
+Also built: schema (`db/schema.ts`, 14 tables) and migrations 0001–0002; `recordEvent()`;
+award math and tests; masking projection and tests; Block B threshold rules and projection
 helper (`lib/policy.ts`, 30 tests); concentration helper (`lib/queries/concentration.ts`,
-4 tests); approvals queue + detail reads (`lib/queries/approvals.ts`, 3 tests); approve/
+4 tests); approvals queue and detail reads (`lib/queries/approvals.ts`, 3 tests); approve/
 reject/clarify server actions (`app/(app)/approvals/actions.ts`, 8 input-gate tests);
 the `/approvals` UI; `lib/env.ts` (replaces silent `process.env.X!` casts in supabase
-and middleware); Supabase clients; caller resolution + dealer-token resolver
+and middleware); Supabase clients; caller resolution and dealer-token resolver
 (`lib/auth/caller.ts`); seed (`db/seed.ts`, `db/seed-data.ts`, includes a seeded award
-and an open exception for `rfq:0141`, plus Block C trades + handoff + open exception
-for `rfq:0138` / `rfq:0139`); login (password + magic-link); RFQ blotter; RFQ detail with
+and an open exception for `rfq:0141`, plus Block C trades, handoff, and open exception
+for `rfq:0138` / `rfq:0139`); login (password and magic-link); RFQ blotter; RFQ detail with
 quote board, single-vs-blended comparison, Realtime-signal refetch, and
 `recommendAward`; lazy sweep; Resend wrapper (`lib/email.ts`); dealer `/quote/[token]`;
-Block C: pure FpML payload builder + handoff ref (`lib/stp.ts` + `lib/handoff-ref.ts`,
+Block C: pure FpML payload builder and handoff ref (`lib/stp.ts` and `lib/handoff-ref.ts`,
 11 tests, import-allowlist enforced); ops queries (`lib/queries/ops.ts`, 2 generated-SQL
 tests); generate/advance/openException/closeException server actions
 (`app/(app)/ops/actions.ts`, 9 input-gate tests); the `/ops` UI.

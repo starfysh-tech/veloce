@@ -9,7 +9,7 @@
 A 2-agent validation ran against merged Block B. Block B is green (63/63 tests, `tsc`
 clean, lint clean). Note the following before building:
 
-1. **Seeded `rfq:0139`/`rfq:0138` have NO `trades` rows.** Block B only seeds an award +
+1. **Seeded `rfq:0139`/`rfq:0138` have NO `trades` rows.** Block B only seeds an award and
    exception for `rfq:0141`. `rfq:0139` (awarded, HALCYON) and `rfq:0138` (in_stp, MERIDIAN)
    ship with quotes but no `trades`, so `generateHandoff()` has nothing to act on out of the
    box. Before building/demoing: either run `approveAward` on an `awaiting_approval` RFQ to
@@ -87,7 +87,7 @@ is persisted and previewable but NEVER transmitted** — no network send, no ext
 
 Verdict: **REASONABLE with mandatory revisions below.** Architecture sound (status
 machine, Decision 7/12 alignment, one-handoff-per-rfq model). All findings are
-localized to actions.ts + builder defensiveness.
+localized to actions.ts and builder defensiveness.
 
 ### Critical (must fix before shipping)
 
@@ -136,7 +136,7 @@ localized to actions.ts + builder defensiveness.
   parse import lines: `expect(source.match(/^import .* from .*$/gm) ?? [])`
   must be a subset of an allowlist (types + pure helpers only). Also assert
   `lib/stp.ts` does NOT import `lib/email.ts`, `node:http`, or `@/lib/supabase/*`.
-- **A5 — Seed cascade is sufficient.** `db/seed.ts:42` deletes `rfqs`; handoffs +
+- **A5 — Seed cascade is sufficient.** `db/seed.ts:42` deletes `rfqs`; handoffs and
   handoff_exceptions cascade via `onDelete: 'cascade'` (`db/schema.ts:251, 264`).
   No manual delete needed. Add a comment in seed.ts noting the cascade.
 - **A6 — Per-commit tests (not batched).** Git log (Block B) shows tests landed
@@ -175,16 +175,16 @@ localized to actions.ts + builder defensiveness.
 
 ### Revised commit list (7 → 6)
 
-1. `feat(seed): trades + sent handoff for rfq:0138, trades for rfq:0139`
+1. `feat(seed): trades and sent handoff for rfq:0138, trades for rfq:0139`
    (one synthetic handoff with one open exception, deterministic refs).
-2. `feat(stp): pure FpML-style payload builder + tests`
-   (`lib/stp.ts` + `lib/handoff-ref.ts`; LEI throws on missing data; tests
+2. `feat(stp): pure FpML-style payload builder and tests`
+   (`lib/stp.ts` and `lib/handoff-ref.ts`; LEI throws on missing data; tests
    cover shape, no-network via import allowlist, missing-LEI rejection).
-3. `feat(ops): tenant-scoped queries + generated-SQL tests`
+3. `feat(ops): tenant-scoped queries and generated-SQL tests`
    (`lib/queries/ops.ts`).
-4. `feat(ops): server actions (generate/advance/exception) + concurrency tests`
+4. `feat(ops): server actions (generate/advance/exception) and concurrency tests`
    (`app/(app)/ops/actions.ts`).
-5. `feat(ops): /ops route + UI` (page + client component).
+5. `feat(ops): /ops route and UI` (page and client component).
 6. (deferred) — no schema migration; no nav change.
 
 ## Shipped (2026-06-16) — branch `feat/block-c-ops-stp`, 6 commits
@@ -194,11 +194,11 @@ Test count: **85** (was 63 after Block B, +22 new).
 | Commit | Scope |
 |--------|-------|
 | `2577e7f` | docs: /vr validation results folded into this spec |
-| `8b97f60` | `feat(stp)`: `lib/stp.ts` pure FpML builder + `lib/handoff-ref.ts` (11 tests; import-allowlist enforces no transmission) |
-| `9b0e649` | `feat(seed)`: backfill trades for `rfq:0139` + trades/handoff/open exception for `rfq:0138` so `/ops` has lifecycle on first load |
+| `8b97f60` | `feat(stp)`: `lib/stp.ts` pure FpML builder and `lib/handoff-ref.ts` (11 tests; import-allowlist enforces no transmission) |
+| `9b0e649` | `feat(seed)`: backfill trades for `rfq:0139` and trades/handoff/open exception for `rfq:0138` so `/ops` has lifecycle on first load |
 | `ac98d21` | `feat(ops)`: `lib/queries/ops.ts` — tenant-scoped reads, 2 generated-SQL tests |
-| `99bdea9` | `feat(ops)`: `app/(app)/ops/actions.ts` — 4 server actions (generate/advance/openException/closeException), 9 input-gate tests |
-| `50c1305` | `feat(ops)`: `/ops` page + client component |
+| `99bdea9` | `feat(ops)`: `app/(app)/ops/actions.ts` — 4 server actions (generate/advance/openException/closeException) and 9 input-gate tests |
+| `50c1305` | `feat(ops)`: `/ops` page and client component |
 
 All /vr critical fixes landed:
 
