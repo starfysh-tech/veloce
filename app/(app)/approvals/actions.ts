@@ -3,9 +3,10 @@
 // Three server actions: approveAward, rejectAward, requestClarification.
 // Each is a single recordEvent() call wrapping all DB mutations in apply(tx).
 // All three start with a conditional UPDATE on rfqs.status — only the caller
-// that finds the row still 'awaiting_approval' wins; everyone else throws
-// StaleApprovalError. This is the concurrency guard (no SELECT FOR UPDATE
-// needed; per docs/blocks/block-b-approvals.md "Decisions resolved").
+// that finds the row still 'awaiting_approval' wins; everyone else throws a
+// stale-approval error (see staleApprovalError() below). This is the
+// concurrency guard (no SELECT FOR UPDATE needed; per
+// docs/blocks/block-b-approvals.md "Decisions resolved").
 'use server';
 import { and, eq } from 'drizzle-orm';
 import { db } from '@/db';
@@ -24,18 +25,14 @@ import { getDealerConcentration } from '@/lib/queries/concentration';
 import { generateTradeRef } from '@/lib/trade-ref';
 import { notifyAwardApproved } from '@/lib/email';
 
-/**
- * Thrown when an approver acts on an RFQ that has already moved past
- * `awaiting_approval` (someone else approved/rejected, or the auction was
- * re-opened). Carries a discriminating `name` so the client can render a
- * "refresh the page" message instead of a generic error.
- */
-export class StaleApprovalError extends Error {
-  override name = 'StaleApprovalError';
-  constructor(message = 'RFQ no longer awaiting approval — refresh and try again.') {
-    super(message);
-  }
-}
+// Thrown when an approver acts on an RFQ that has already moved past
+// `awaiting_approval` (someone else approved/rejected, or the auction was
+// re-opened). Next's "use server" boundary forbids non-async exports, so this
+// is a plain factory + sentinel message — the client matches on the message
+// substring "no longer awaiting approval" to render a "refresh" hint.
+const STALE_APPROVAL_MESSAGE =
+  'RFQ no longer awaiting approval — refresh and try again.';
+const staleApprovalError = () => new Error(STALE_APPROVAL_MESSAGE);
 
 // ---------------------------------------------------------------- approve
 
@@ -99,7 +96,7 @@ export async function approveAward(input: {
         .set({ status: 'awarded' })
         .where(and(eq(rfqs.id, rfqId), eq(rfqs.status, 'awaiting_approval')))
         .returning();
-      if (!updated) throw new StaleApprovalError();
+      if (!updated) throw staleApprovalError();
       if (updated.firmId !== caller.firmId) throw new Error('Not your firm');
 
       // 2. Re-fetch the award.
@@ -267,7 +264,7 @@ export async function rejectAward(input: { rfqId: string; reason: string }) {
           ),
         )
         .returning();
-      if (!updated) throw new StaleApprovalError();
+      if (!updated) throw staleApprovalError();
       if (updated.firmId !== caller.firmId) throw new Error('Not your firm');
     },
   );
@@ -318,7 +315,7 @@ export async function requestClarification(input: {
           ),
         )
         .returning();
-      if (!updated) throw new StaleApprovalError();
+      if (!updated) throw staleApprovalError();
       if (updated.firmId !== caller.firmId) throw new Error('Not your firm');
     },
   );
