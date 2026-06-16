@@ -61,7 +61,7 @@ decision + event log, exportable as JSON; (2) a flattened cross-RFQ event log fr
 ## Build (one commit each)
 
 1. `lib/queries/compliance.ts` — tenant-scoped reads: best-ex bundle per RFQ; flattened
-   event log (`events` for `firmId`, newest first, limited in overview); open + closed
+   event log (`events` for `firmId`, newest first, limited in overview); open and closed
    compliance exceptions; concentration table. Any optional RFQ metadata join on `events` or
    `exceptions` must join on both `rfqs.id` and `rfqs.firmId` to avoid leaking labels from a
    mismatched row.
@@ -72,7 +72,7 @@ decision + event log, exportable as JSON; (2) a flattened cross-RFQ event log fr
    best-ex JSON bundle (latest stored ladder + decision + event log) as a download. **No
    state change** — not a `recordEvent()` call; it's a pure read serialized to JSON. Route
    handlers do not inherit page role gates, so the route must call `resolveUser()`, require
-   `compliance` or `admin`, and query by `caller.firmId` + `rfqId`.
+   `compliance` or `admin`, and query by `caller.firmId` and `rfqId`.
 5. `app/(app)/layout.tsx` — expose `/compliance` in the admin nav as well as the compliance
    nav.
 

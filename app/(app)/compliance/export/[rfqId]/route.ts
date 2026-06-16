@@ -5,6 +5,8 @@ import { NextResponse } from 'next/server';
 import { resolveUser } from '@/lib/auth/caller';
 import { getBestExBundle } from '@/lib/queries/compliance';
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 function filenamePart(value: string): string {
   return value.replace(/[^A-Za-z0-9._-]/g, '_');
 }
@@ -19,6 +21,9 @@ export async function GET(_req: Request, { params }: { params: Promise<{ rfqId: 
   }
 
   const { rfqId } = await params;
+  if (!UUID_RE.test(rfqId)) {
+    return NextResponse.json({ error: 'invalid_rfq_id' }, { status: 400 });
+  }
   const bundle = await getBestExBundle(caller.firmId, rfqId);
   if (!bundle) return NextResponse.json({ error: 'not_found' }, { status: 404 });
 

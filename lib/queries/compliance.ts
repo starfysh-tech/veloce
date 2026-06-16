@@ -269,7 +269,7 @@ export function complianceRfqEventsQuery(firmId: string, rfqId: string) {
   return db
     .select(complianceEventSelect)
     .from(events)
-    .innerJoin(rfqs, eq(rfqs.id, events.rfqId))
+    .innerJoin(rfqs, and(eq(rfqs.id, events.rfqId), eq(rfqs.firmId, firmId)))
     .where(and(eq(events.firmId, firmId), eq(events.rfqId, rfqId)))
     .orderBy(asc(events.createdAt));
 }

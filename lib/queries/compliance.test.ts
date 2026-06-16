@@ -77,4 +77,20 @@ describe('compliance queries', () => {
     expect(params).toContain('00000000-0000-0000-0000-000000000000');
     expect(params).toContain('11111111-1111-1111-1111-111111111111');
   });
+
+  it('tenant-scopes export event labels through rfqs', async () => {
+    process.env.DATABASE_URL ||= 'postgres://test:test@localhost:5432/test';
+    const { complianceRfqEventsQuery } = await import('./compliance');
+
+    const { sql, params } = complianceRfqEventsQuery(
+      '00000000-0000-0000-0000-000000000000',
+      '11111111-1111-1111-1111-111111111111',
+    ).toSQL();
+
+    expect(sql).toMatch(/from\s+"events"/i);
+    expect(sql).toMatch(/inner join\s+"rfqs".*"rfqs"\."firm_id"\s*=\s*\$/i);
+    expect(sql).toMatch(/"events"\."firm_id"\s*=\s*\$/i);
+    expect(params).toContain('00000000-0000-0000-0000-000000000000');
+    expect(params).toContain('11111111-1111-1111-1111-111111111111');
+  });
 });
