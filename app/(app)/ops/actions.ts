@@ -24,7 +24,6 @@ import {
 import { db } from '@/db';
 import { resolveUser } from '@/lib/auth/caller';
 import { recordEvent } from '@/lib/record-event';
-import { getRfqFirmIdOrThrow } from '@/lib/queries/rfqs';
 import { getRfqForHandoff } from '@/lib/queries/ops';
 import {
   buildStpPayload,
@@ -38,16 +37,8 @@ import { generateHandoffRef } from '@/lib/handoff-ref';
 type TradeStatus = (typeof tradeStatus.enumValues)[number];
 type HandoffStatus = (typeof handoffStatus.enumValues)[number];
 
-const STALE_MESSAGE = 'Handoff state drifted — refresh and try again.';
-const staleError = () => new Error(STALE_MESSAGE);
-
-// Lock the trade-status machine so a typo can't widen it. handoffStatus has
-// the same shape; both progress one step at a time.
-const NEXT_TRADE: Record<HandoffStatus, HandoffStatus> = {
-  sent: 'matched',
-  matched: 'affirmed',
-  affirmed: 'affirmed', // terminal
-};
+const staleError = () =>
+  new Error('Handoff state drifted — refresh and try again.');
 
 function requireOps() {
   // Resolution is async; this is a tiny wrapper to keep call sites readable.
@@ -65,12 +56,14 @@ export async function generateHandoff(input: { rfqId: string }) {
   const caller = await requireOps();
   const { rfqId } = input;
 
-  // Tenant gate + pre-tx data load. The action stays out of the tx for the
-  // pure payload build, so the tx itself only does conditional writes.
-  const firmId = await getRfqFirmIdOrThrow(rfqId, caller.firmId);
+  // Tenant gate + pre-tx data load in one shot. getRfqForHandoff filters on
+  // (id, firmId) so a wrong-tenant caller gets null; firmId for the
+  // EventInput comes off the returned rfq. The action stays out of the tx
+  // for the pure payload build so the tx body is only conditional writes.
   const pkg = await getRfqForHandoff(rfqId, caller.firmId);
   if (!pkg) throw new Error('RFQ not found.');
   const { rfq, trades: tradeRows, firmsById } = pkg;
+  const firmId = rfq.firmId;
   if (!tradeRows.length) {
     throw new Error('No trades to hand off — approve the award first.');
   }
