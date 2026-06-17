@@ -49,6 +49,7 @@ export const eventType = pgEnum('event_type', [
   'trade_captured', 'handoff_sent', 'handoff_advanced',
   'exception_opened', 'exception_closed',
   'bank_panel_updated',
+  'attachment_added',
 ]);
 
 // --------------------------------------------------------------- firms
@@ -172,6 +173,25 @@ export const invitations = pgTable('invitations', {
 }, (t) => ({
   rfqIdx: index('invitations_rfq_idx').on(t.rfqId),
   tokenIdx: index('invitations_token_idx').on(t.tokenHash),
+}));
+
+// ------------------------------------------------------------ attachments
+// RFQ documents live in a private Supabase Storage bucket. This table is the
+// tenant-scoped metadata source of truth; signed URLs are generated on demand.
+export const attachments = pgTable('attachments', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  rfqId: uuid('rfq_id').notNull().references(() => rfqs.id, { onDelete: 'cascade' }),
+  // Owning buy-side firm, duplicated for direct tenant scoping. Never a dealer firm.
+  firmId: uuid('firm_id').notNull().references(() => firms.id),
+  uploadedByUserId: uuid('uploaded_by_user_id').references(() => users.id),
+  displayFilename: text('display_filename').notNull(),
+  storagePath: text('storage_path').notNull(),
+  mimeType: text('mime_type').notNull(),
+  sizeBytes: integer('size_bytes').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => ({
+  rfqFirmIdx: index('attachments_rfq_firm_idx').on(t.rfqId, t.firmId),
+  storagePathUniq: uniqueIndex('attachments_storage_path_uniq').on(t.storagePath),
 }));
 
 // ---------------------------------------------------------------- quotes
@@ -317,6 +337,7 @@ export const rfqsRel = relations(rfqs, ({ one, many }) => ({
   quotes: many(quotes),
   invited: many(rfqInvitedDealers),
   invitations: many(invitations),
+  attachments: many(attachments),
   awards: many(awards),
   trades: many(trades),
 }));
@@ -327,4 +348,9 @@ export const quotesRel = relations(quotes, ({ one }) => ({
 export const invitationsRel = relations(invitations, ({ one }) => ({
   rfq: one(rfqs, { fields: [invitations.rfqId], references: [rfqs.id] }),
   dealer: one(firms, { fields: [invitations.dealerFirmId], references: [firms.id] }),
+}));
+export const attachmentsRel = relations(attachments, ({ one }) => ({
+  rfq: one(rfqs, { fields: [attachments.rfqId], references: [rfqs.id] }),
+  firm: one(firms, { fields: [attachments.firmId], references: [firms.id] }),
+  uploadedBy: one(users, { fields: [attachments.uploadedByUserId], references: [users.id] }),
 }));

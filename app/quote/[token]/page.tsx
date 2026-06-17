@@ -7,8 +7,13 @@
 import { notFound } from 'next/navigation';
 import { resolveDealerToken } from '@/lib/auth/caller';
 import { getDealerView } from '@/lib/queries/dealer-view';
-import { Pill, notionalLabel, fmtPrice } from '@/components/ui';
+import { listAttachmentsWithUrls } from '@/lib/storage';
+import { Pill, notionalLabel } from '@/components/ui';
 import { DealerForm } from './form';
+
+function fmtBytes(bytes: number): string {
+  return `${(bytes / 1024 / 1024).toFixed(2)} MB`;
+}
 
 export default async function DealerQuotePage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
@@ -18,6 +23,7 @@ export default async function DealerQuotePage({ params }: { params: Promise<{ to
   const view = await getDealerView(caller, caller.rfqId);
   if (!view) notFound();
   const { rfq, own, dealerFirm, isOpen } = view;
+  const attachments = await listAttachmentsWithUrls(caller, caller.rfqId);
 
   return (
     <div style={{ maxWidth: 920, margin: '0 auto', padding: '28px 20px' }}>
@@ -58,6 +64,30 @@ export default async function DealerQuotePage({ params }: { params: Promise<{ to
             <div key={l as string}><div className="s-label">{l}</div><div className="s-val">{v}</div></div>
           ))}
         </div>
+      </div>
+
+      <div style={{ height: 16 }} />
+
+      <div className="card">
+        <div className="row">
+          <h3 style={{ margin: 0 }}>Documents</h3>
+          <span className="spacer" />
+          <span className="note">Signed links expire shortly</span>
+        </div>
+        <hr className="hr" />
+        {attachments.length === 0 ? (
+          <div className="note">No documents attached.</div>
+        ) : (
+          <div className="grid" style={{ gap: 8 }}>
+            {attachments.map((a) => (
+              <a key={a.id} className="checkrow" href={a.url} target="_blank" rel="noreferrer">
+                <span style={{ fontWeight: 600 }}>{a.filename}</span>
+                <span className="spacer" />
+                <span className="note">{fmtBytes(a.sizeBytes)}</span>
+              </a>
+            ))}
+          </div>
+        )}
       </div>
 
       <div style={{ height: 16 }} />

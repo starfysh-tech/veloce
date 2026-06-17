@@ -57,6 +57,7 @@ export function Wizard({ panels, dealers }: { panels: PanelOption[]; dealers: De
   const [step, setStep] = useState(0);
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
 
   const [f, setF] = useState({
     template: 'put' as TemplateId,
@@ -131,7 +132,10 @@ export function Wizard({ panels, dealers }: { panels: PanelOption[]; dealers: De
 
     startTransition(async () => {
       try {
-        await launchRfqAction(payload);
+        const formData = new FormData();
+        formData.set('payload', JSON.stringify(payload));
+        files.forEach((file) => formData.append('attachments', file));
+        await launchRfqAction(formData);
       } catch (e) {
         // Next.js redirect throws an internal control-flow error — let it bubble.
         if (isNextRedirectError(e)) throw e;
@@ -346,6 +350,29 @@ export function Wizard({ panels, dealers }: { panels: PanelOption[]; dealers: De
           {overThreshold && (
             <div className="flag flag-info" style={{ marginTop: 12 }}>
               Pre-trade policy check passed. Approver sign-off will be required at award (notional &gt; $100M).
+            </div>
+          )}
+          <hr className="hr" />
+          <label className="fld">Attachments
+            <input
+              type="file"
+              multiple
+              accept="application/pdf,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+              onChange={(e) => setFiles(Array.from(e.target.files ?? []))}
+            />
+          </label>
+          <div className="note" style={{ marginTop: 8 }}>
+            Optional term sheets or basket files. Allowed: PDF, CSV, XLSX. Max 10 MB each.
+          </div>
+          {files.length > 0 && (
+            <div className="grid" style={{ gap: 6, marginTop: 10 }}>
+              {files.map((file) => (
+                <div key={`${file.name}-${file.size}`} className="checkrow">
+                  <span style={{ fontWeight: 600 }}>{file.name}</span>
+                  <span className="spacer" />
+                  <span className="note">{(file.size / 1024 / 1024).toFixed(2)} MB</span>
+                </div>
+              ))}
             </div>
           )}
           {error && (

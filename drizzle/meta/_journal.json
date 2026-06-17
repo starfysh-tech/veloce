@@ -22,6 +22,20 @@
       "when": 1781565780724,
       "tag": "0002_special_puppet_master",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1781654400000,
+      "tag": "0003_admin_panel_event",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1781731479709,
+      "tag": "0005_glamorous_pixie",
+      "breakpoints": true
     }
   ]
 }

@@ -18,6 +18,7 @@ import {
 } from '@/lib/policy';
 import { getDealerConcentration } from '@/lib/queries/concentration';
 import { nextExceptionRef } from '@/lib/exception-ref';
+import { uploadAttachment } from '@/lib/storage';
 
 export async function recommendAwardAction(rfqId: string, mode: 'single' | 'blended') {
   const caller = await resolveUser();
@@ -165,4 +166,20 @@ export async function recommendAwardAction(rfqId: string, mode: 'single' | 'blen
       }
     },
   );
+}
+
+export async function uploadRfqAttachmentAction(rfqId: string, formData: FormData) {
+  const caller = await resolveUser();
+  if (caller.kind !== 'user' || (caller.role !== 'trader' && caller.role !== 'admin')) {
+    throw new Error('Only a trader or admin can upload attachments.');
+  }
+
+  const files = formData
+    .getAll('attachments')
+    .filter((value): value is File => value instanceof File && value.size > 0);
+  if (!files.length) throw new Error('Choose at least one attachment.');
+
+  for (const file of files) {
+    await uploadAttachment(caller, rfqId, file);
+  }
 }
