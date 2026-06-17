@@ -2,14 +2,10 @@
 'use client';
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Icon, Pill, fmtMoneyFull, fmtPrice, notionalLabel } from '@/components/ui';
+import { Icon, Pill, fmtDateTime, fmtMoneyFull, fmtPrice, notionalLabel } from '@/components/ui';
 import type { ComplianceOverview } from '@/lib/queries/compliance';
 
 type Tab = 'bestex' | 'exceptions' | 'concentration' | 'log';
-
-function fmtDate(d: Date | string): string {
-  return new Date(d).toISOString().slice(0, 16).replace('T', ' ');
-}
 
 function fmtShare(bps: number): string {
   return `${(bps / 100).toFixed(1)}%`;
@@ -136,7 +132,7 @@ export default function ComplianceClient({ overview }: { overview: ComplianceOve
                     <span className={`badge ${e.open ? 'badge-warn' : ''}`}>{e.status}</span>
                   </div>
                   <div style={{ marginTop: 6, fontSize: 12.5 }}>{e.text}</div>
-                  <div className="note" style={{ marginTop: 4 }}>Opened {fmtDate(e.openedAt)}</div>
+                  <div className="note" style={{ marginTop: 4 }}>Opened {fmtDateTime(e.openedAt)}</div>
                 </div>
               ))}
             </div>
@@ -187,7 +183,7 @@ export default function ComplianceClient({ overview }: { overview: ComplianceOve
             <tbody>
               {overview.events.map((e) => (
                 <tr key={e.id}>
-                  <td className="mono t-faint" style={{ whiteSpace: 'nowrap' }}>{fmtDate(e.createdAt)}</td>
+                  <td className="mono t-faint" style={{ whiteSpace: 'nowrap' }}>{fmtDateTime(e.createdAt)}</td>
                   <td className="mono t-muted">
                     {e.rfqId ? (
                       <Link href={`/rfqs/${e.rfqId}`} style={{ color: 'inherit' }}>{e.rfqRef ?? e.publicRef ?? e.rfqId}</Link>

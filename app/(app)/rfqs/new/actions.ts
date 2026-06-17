@@ -19,6 +19,7 @@ import {
 import { hashToken, resolveUser } from '@/lib/auth/caller';
 import { recordEvent } from '@/lib/record-event';
 import { sendInvitation } from '@/lib/email';
+import { hasUniqueIds, MIN_RFQ_DEALERS } from '@/lib/panel-policy';
 import { generatePublicRef } from '@/lib/public-ref';
 import { TEMPLATES, type TemplateId } from '@/lib/templates';
 
@@ -44,8 +45,8 @@ const LaunchRfqSchema = z.object({
   panelId: z.string().uuid(),
   invited: z
     .array(z.string().uuid())
-    .min(3)
-    .refine((arr) => new Set(arr).size === arr.length, {
+    .min(MIN_RFQ_DEALERS)
+    .refine(hasUniqueIds, {
       message: 'Invited dealers must be unique',
     }),
 });

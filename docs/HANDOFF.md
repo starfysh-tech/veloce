@@ -73,8 +73,8 @@ decision blocks you, surface it rather than working around it.**
     requirement but enforced as single-approver-plus-note for the pilot (honest
     gap, no governance theater). The other three rules are fully enforced with
     tests.
-22. **Admin read-only**, with code comments marking what each section needs to
-    become editable.
+22. **Admin functional MVP**, with bank panel management editable through
+    `recordEvent()` and still-code-backed sections marked read-only/TODO.
 23. Trade-transcription fallback deferred — out of MVP scope.
 24. Attachment scanning deferred — MIME/size validation only.
 
@@ -129,7 +129,7 @@ Each rule gets a unit test.
 | `generateHandoff` / `advanceHandoff` | Conditional UPDATE + stale-state pattern on multi-table flips | `app/(app)/ops/actions.ts` |
 | `getRfqForHandoff` | Pre-tx tenant-scoped read that returns rfq, trades, and firms map | `lib/queries/ops.ts` |
 
-Also built: schema (`db/schema.ts`, 14 tables) and migrations 0001–0002; `recordEvent()`;
+Also built: schema (`db/schema.ts`, 14 tables) and migrations 0001–0003; `recordEvent()`;
 award math and tests; masking projection and tests; Block B threshold rules and projection
 helper (`lib/policy.ts`, 30 tests); concentration helper (`lib/queries/concentration.ts`,
 4 tests); approvals queue and detail reads (`lib/queries/approvals.ts`, 3 tests); approve/
@@ -147,9 +147,12 @@ tests); generate/advance/openException/closeException server actions
 (`app/(app)/ops/actions.ts`, 9 input-gate tests); the `/ops` UI; Block D compliance
 workspace (`/compliance`) for compliance/admin, read-only best-ex JSON export, tenant-scoped
 compliance queries (`lib/queries/compliance.ts`, 5 generated-SQL tests), D-3 public-ref fixes
-in email and dealer token view, and a repo ESLint config for non-interactive lint validation.
+    in email and dealer token view, and a repo ESLint config for non-interactive lint validation;
+    Block E admin workspace (`/admin`) for admin users with tenant-aware reads,
+    audited bank panel create/rename/default/member/delete actions (`bank_panel_updated`),
+    and read-only TODO-marked templates/rules/thresholds/users sections.
 
-Test count after Block D: **91 tests** across `npm test`.
+Test count after Block E: **100 tests** across `npm test`.
 
 ## Remaining blocks (each independently shippable)
 
@@ -159,11 +162,11 @@ Test count after Block D: **91 tests** across `npm test`.
 | ~~**B**~~ | ~~Approval workspace + threshold enforcement~~ | shipped PR #3 | `/approvals` |
 | ~~**C**~~ | ~~Ops / STP workspace~~ | shipped (branch `feat/block-c-ops-stp`) | `/ops` |
 | ~~**D**~~ | ~~Compliance / best-execution workspace~~ | shipped (current branch) | `/compliance` |
-| **E** | Admin workspace (read-only) | `_legacy/views/Admin.jsx` | `/admin` |
+| ~~**E**~~ | ~~Admin workspace + bank panel management~~ | shipped (branch `feat/manage-bank-panels`) | `/admin` |
 | **F** | Attachments via Supabase Storage | new infra surface | create-RFQ + RFQ detail |
 | **G** | Role-specific dashboards (polish, ship last) | `_legacy/views/Dashboard.jsx` | per-role landing |
 
-Priority next: E → F → G. Commit incrementally (one logical commit per
+Priority next: F → G. Commit incrementally (one logical commit per
 piece). Every mutation through `recordEvent()`. Every read tenant- or token-scoped.
 Run `npm test` and `npx tsc --noEmit` before each commit.
 

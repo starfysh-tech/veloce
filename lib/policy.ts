@@ -8,6 +8,10 @@
 import { createHash } from 'crypto';
 import { fromTicks } from './award-math';
 
+export const APPROVER_NOTIONAL_THRESHOLD_MINOR = 10_000_000_000;
+export const COMMITTEE_NOTE_THRESHOLD_MINOR = 25_000_000_000;
+export const CONCENTRATION_FLAG_THRESHOLD_BPS = 3500;
+
 // --- Types -----------------------------------------------------------------
 
 export type AwardFlag = {
@@ -40,14 +44,14 @@ export function makeAwardFlag(severity: AwardFlag['severity'], text: string): Aw
 
 /** Rule (a): >$100M requires the approver step. 100M USD = 10_000_000_000 cents. */
 export function requiresApprover(notionalMinor: number): boolean {
-  return notionalMinor > 10_000_000_000;
+  return notionalMinor > APPROVER_NOTIONAL_THRESHOLD_MINOR;
 }
 
 /** Rule (b) gate: >$250M trips the committee-note requirement.
  *  $250M = 25_000_000_000 cents. Pilot enforces single-approver-plus-note;
  *  see HANDOFF.md:91. Block D may add true two-approver gating. */
 export function requiresCommitteeNote(notionalMinor: number): boolean {
-  return notionalMinor > 25_000_000_000;
+  return notionalMinor > COMMITTEE_NOTE_THRESHOLD_MINOR;
 }
 
 /** Rule (b) validation: committee note must be ≥20 chars after trim. */
@@ -65,7 +69,7 @@ export function validateCommitteeNote(
 
 /** Rule (c): dealer projected concentration >35% (3500 bps) → warn flag. */
 export function concentrationFlag(projectedShareBps: number): AwardFlag | null {
-  if (projectedShareBps <= 3500) return null;
+  if (projectedShareBps <= CONCENTRATION_FLAG_THRESHOLD_BPS) return null;
   // bps → percent, one decimal place. 3501 → 35.0% (rounding at the boundary
   // is fine; the rule already fired on the bps comparison).
   const pct = (projectedShareBps / 100).toFixed(1);
