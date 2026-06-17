@@ -4,8 +4,9 @@
 
 import React, { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { Icon } from '@/components/ui';
-import type { AdminOverview, AdminPanelRow } from '@/lib/queries/admin';
+import { Icon, fmtDateTime } from '@/components/ui';
+import { MIN_RFQ_DEALERS } from '@/lib/panel-policy';
+import type { AdminDealerRow, AdminOverview, AdminPanelRow } from '@/lib/queries/admin';
 import {
   createBankPanelAction,
   deleteBankPanelAction,
@@ -16,30 +17,52 @@ import {
 
 type Tab = 'firms' | 'panels' | 'templates' | 'rules' | 'thresholds' | 'audit';
 
-function fmtDate(d: Date | string): string {
-  return new Date(d).toISOString().slice(0, 16).replace('T', ' ');
-}
-
 function firmTypeLabel(type: string): string {
   if (type === 'insurer') return 'Insurer';
   if (type === 'fund') return 'Fund';
   return 'Dealer Bank';
 }
 
-function PanelEditor({ panel, overview, run, pending }: {
+function toggleSelected(current: string[], id: string): string[] {
+  return current.includes(id) ? current.filter((x) => x !== id) : [...current, id];
+}
+
+function DealerSelector({ dealers, selectedIds, onToggle }: {
+  dealers: AdminDealerRow[];
+  selectedIds: string[];
+  onToggle: (id: string) => void;
+}) {
+  return (
+    <div className="grid" style={{ gap: 6 }}>
+      {dealers.map((dealer) => (
+        <label key={dealer.id} className="checkrow" style={{ padding: 8 }}>
+          <input
+            type="checkbox"
+            checked={selectedIds.includes(dealer.id)}
+            onChange={() => onToggle(dealer.id)}
+          />
+          <div>
+            <b style={{ fontSize: 12.5 }}>{dealer.name}</b>
+            <div className="note">{dealer.shortCode ?? 'No short code'} · {dealer.lei ?? 'No LEI'}</div>
+          </div>
+        </label>
+      ))}
+    </div>
+  );
+}
+
+function PanelEditor({ panel, overview, dealerById, run, pending }: {
   panel: AdminPanelRow;
   overview: AdminOverview;
+  dealerById: Map<string, AdminDealerRow>;
   run: (fn: () => Promise<unknown>) => void;
   pending: boolean;
 }) {
   const [name, setName] = useState(panel.name);
   const [dealerIds, setDealerIds] = useState<string[]>(panel.dealerIds);
-  const dealerById = new Map(overview.dealers.map((d) => [d.id, d]));
 
   function toggleDealer(id: string) {
-    setDealerIds((current) => (
-      current.includes(id) ? current.filter((x) => x !== id) : [...current, id]
-    ));
+    setDealerIds((current) => toggleSelected(current, id));
   }
 
   return (
@@ -83,22 +106,10 @@ function PanelEditor({ panel, overview, run, pending }: {
         )}
       </div>
       <div className="note" style={{ marginTop: 6 }}>
-        {dealerIds.length} selected. Create RFQ requires at least 3 dealers.
+        {dealerIds.length} selected. Create RFQ requires at least {MIN_RFQ_DEALERS} dealers.
       </div>
-      <div className="grid" style={{ gap: 6, marginTop: 10 }}>
-        {overview.dealers.map((dealer) => (
-          <label key={dealer.id} className="checkrow" style={{ padding: 8 }}>
-            <input
-              type="checkbox"
-              checked={dealerIds.includes(dealer.id)}
-              onChange={() => toggleDealer(dealer.id)}
-            />
-            <div>
-              <b style={{ fontSize: 12.5 }}>{dealer.name}</b>
-              <div className="note">{dealer.shortCode ?? 'No short code'} · {dealer.lei ?? 'No LEI'}</div>
-            </div>
-          </label>
-        ))}
+      <div style={{ marginTop: 10 }}>
+        <DealerSelector dealers={overview.dealers} selectedIds={dealerIds} onToggle={toggleDealer} />
       </div>
       <div className="row" style={{ marginTop: 10 }}>
         <div className="t-faint" style={{ flex: 1 }}>
@@ -106,7 +117,7 @@ function PanelEditor({ panel, overview, run, pending }: {
         </div>
         <button
           className="btn btn-sm btn-primary"
-          disabled={pending || dealerIds.length < 3}
+          disabled={pending || dealerIds.length < MIN_RFQ_DEALERS}
           onClick={() => run(() => updateBankPanelMembersAction({ panelId: panel.id, dealerFirmIds: dealerIds }))}
         >
           Save dealers
@@ -138,10 +149,10 @@ export default function AdminClient({ overview }: { overview: AdminOverview }) {
   }
 
   function toggleNewDealer(id: string) {
-    setNewDealerIds((current) => (
-      current.includes(id) ? current.filter((x) => x !== id) : [...current, id]
-    ));
+    setNewDealerIds((current) => toggleSelected(current, id));
   }
+
+  const dealerById = new Map(overview.dealers.map((d) => [d.id, d]));
 
   return (
     <>
@@ -225,31 +236,21 @@ export default function AdminClient({ overview }: { overview: AdminOverview }) {
             <p className="sub">Saved dealer groups used by the Create RFQ wizard. Edits are audited as bank_panel_updated events.</p>
             <div className="grid" style={{ gap: 10 }}>
               {overview.panels.map((panel) => (
-                <PanelEditor key={panel.id} panel={panel} overview={overview} run={run} pending={pending} />
+                <PanelEditor key={panel.id} panel={panel} overview={overview} dealerById={dealerById} run={run} pending={pending} />
               ))}
               {overview.panels.length === 0 && <div className="empty">No panels configured.</div>}
             </div>
           </div>
           <div className="card">
             <h3>Create panel</h3>
-            <p className="sub">Panels must include at least three dealer firms to be RFQ-ready.</p>
+            <p className="sub">Panels must include at least {MIN_RFQ_DEALERS} dealer firms to be RFQ-ready.</p>
             <input
               value={newName}
               onChange={(ev) => setNewName(ev.target.value)}
               placeholder="Panel name"
               style={{ width: '100%', marginBottom: 10 }}
             />
-            <div className="grid" style={{ gap: 6 }}>
-              {overview.dealers.map((dealer) => (
-                <label key={dealer.id} className="checkrow" style={{ padding: 8 }}>
-                  <input type="checkbox" checked={newDealerIds.includes(dealer.id)} onChange={() => toggleNewDealer(dealer.id)} />
-                  <div>
-                    <b style={{ fontSize: 12.5 }}>{dealer.name}</b>
-                    <div className="note">{dealer.shortCode ?? 'No short code'} · {dealer.lei ?? 'No LEI'}</div>
-                  </div>
-                </label>
-              ))}
-            </div>
+            <DealerSelector dealers={overview.dealers} selectedIds={newDealerIds} onToggle={toggleNewDealer} />
             <label className="checkrow" style={{ marginTop: 10 }}>
               <input type="checkbox" checked={newDefault} onChange={() => setNewDefault((v) => !v)} />
               <div>
@@ -260,7 +261,7 @@ export default function AdminClient({ overview }: { overview: AdminOverview }) {
             <button
               className="btn btn-primary"
               style={{ marginTop: 10 }}
-              disabled={pending || !newName.trim() || newDealerIds.length < 3}
+              disabled={pending || !newName.trim() || newDealerIds.length < MIN_RFQ_DEALERS}
               onClick={() => run(async () => {
                 await createBankPanelAction({ name: newName, dealerFirmIds: newDealerIds, isDefault: newDefault });
                 setNewName('');
@@ -345,7 +346,7 @@ export default function AdminClient({ overview }: { overview: AdminOverview }) {
             <tbody>
               {overview.events.map((e) => (
                 <tr key={e.id}>
-                  <td className="mono t-faint" style={{ whiteSpace: 'nowrap' }}>{fmtDate(e.createdAt)}</td>
+                  <td className="mono t-faint" style={{ whiteSpace: 'nowrap' }}>{fmtDateTime(e.createdAt)}</td>
                   <td className="t-strong">{e.actorLabel}</td>
                   <td><span className="badge">{e.type}</span></td>
                   <td className="t-muted">{e.summary}</td>

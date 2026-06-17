@@ -5,6 +5,11 @@
 import { asc, desc, eq, sql } from 'drizzle-orm';
 import { db } from '@/db';
 import { bankPanelMembers, bankPanels, events, firms, users } from '@/db/schema';
+import {
+  APPROVER_NOTIONAL_THRESHOLD_MINOR,
+  COMMITTEE_NOTE_THRESHOLD_MINOR,
+  CONCENTRATION_FLAG_THRESHOLD_BPS,
+} from '@/lib/policy';
 import { TEMPLATES } from '@/lib/templates';
 
 export type AdminFirmRow = {
@@ -43,11 +48,9 @@ export type AdminPanelRow = {
 
 export type AdminEventRow = {
   id: string;
-  rfqId: string | null;
   type: string;
   actorLabel: string;
   summary: string;
-  detail: unknown;
   createdAt: Date;
 };
 
@@ -132,11 +135,9 @@ export function adminEventsQuery(firmId: string) {
   return db
     .select({
       id: events.id,
-      rfqId: events.rfqId,
       type: events.type,
       actorLabel: events.actorLabel,
       summary: events.summary,
-      detail: events.detail,
       createdAt: events.createdAt,
     })
     .from(events)
@@ -177,19 +178,19 @@ const THRESHOLDS: AdminStaticRule[] = [
     id: 'approver',
     label: 'Approver required',
     value: 'Notional > $100M',
-    note: 'Enforced by requiresApprover(notionalMinor > 10_000_000_000).',
+    note: `Enforced by requiresApprover(notionalMinor > ${APPROVER_NOTIONAL_THRESHOLD_MINOR}).`,
   },
   {
     id: 'committee',
     label: 'Committee note',
     value: 'Notional > $250M',
-    note: 'Displayed as two-person committee requirement; MVP enforces single approver plus note.',
+    note: `Trips at notionalMinor > ${COMMITTEE_NOTE_THRESHOLD_MINOR}; MVP enforces single approver plus note.`,
   },
   {
     id: 'concentration',
     label: 'Dealer concentration flag',
     value: 'Projected share > 35%',
-    note: 'Computed on trailing-90-day awarded notional, indicative USD basis.',
+    note: `Computed as shareBps > ${CONCENTRATION_FLAG_THRESHOLD_BPS} on trailing-90-day awarded notional, indicative USD basis.`,
   },
   {
     id: 'best-ex',

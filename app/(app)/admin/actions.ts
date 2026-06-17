@@ -11,13 +11,14 @@ import { z } from 'zod';
 import { db } from '@/db';
 import { bankPanelMembers, bankPanels, firms } from '@/db/schema';
 import { resolveUser } from '@/lib/auth/caller';
+import { hasUniqueIds, MIN_RFQ_DEALERS } from '@/lib/panel-policy';
 import { recordEvent } from '@/lib/record-event';
 
 const PanelName = z.string().trim().min(1, 'Panel name is required.').max(80, 'Panel name is too long.');
 const DealerIds = z
   .array(z.string().uuid())
-  .min(3, 'At least three dealers are required for an RFQ-ready panel.')
-  .refine((ids) => new Set(ids).size === ids.length, 'Dealer list cannot contain duplicates.');
+  .min(MIN_RFQ_DEALERS, `At least ${MIN_RFQ_DEALERS} dealers are required for an RFQ-ready panel.`)
+  .refine(hasUniqueIds, 'Dealer list cannot contain duplicates.');
 
 const CreatePanelSchema = z.object({
   name: PanelName,
@@ -81,7 +82,10 @@ export async function createBankPanelAction(input: unknown) {
     },
     async (tx) => {
       if (isDefault) {
-        await tx.update(bankPanels).set({ isDefault: false }).where(eq(bankPanels.firmId, caller.firmId));
+        await tx
+          .update(bankPanels)
+          .set({ isDefault: false })
+          .where(and(eq(bankPanels.firmId, caller.firmId), eq(bankPanels.isDefault, true)));
       }
       await tx.insert(bankPanels).values({
         id: panelId,
@@ -198,7 +202,8 @@ export async function deleteBankPanelAction(input: unknown) {
   const siblingPanels = await db
     .select({ id: bankPanels.id })
     .from(bankPanels)
-    .where(eq(bankPanels.firmId, caller.firmId));
+    .where(eq(bankPanels.firmId, caller.firmId))
+    .limit(2);
   if (siblingPanels.length <= 1) throw new Error('At least one bank panel is required.');
 
   await recordEvent(

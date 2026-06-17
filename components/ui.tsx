@@ -73,6 +73,10 @@ export function fmtPrice(price: string | number, unit?: string): string {
   return unit === 'vol strike' ? `${p.toFixed(2)} vol` : `${p.toFixed(2)}%`;
 }
 
+export function fmtDateTime(d: Date | string): string {
+  return new Date(d).toISOString().slice(0, 16).replace('T', ' ');
+}
+
 export function notionalLabel(rfq: { notionalLabel?: string | null; notionalMinor: number; ccy: string }): string {
   return rfq.notionalLabel || fmtMoney(rfq.notionalMinor, rfq.ccy);
 }

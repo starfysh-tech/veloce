@@ -65,7 +65,7 @@ describe('admin bank-panel actions — input gates', () => {
   it('requires at least three dealers for panel membership', async () => {
     mocks.current = ADMIN;
     const { updateBankPanelMembersAction } = await import('./actions');
-    await expect(updateBankPanelMembersAction({ panelId: PANEL_ID, dealerFirmIds: DEALERS.slice(0, 2) })).rejects.toThrow(/At least three dealers/);
+    await expect(updateBankPanelMembersAction({ panelId: PANEL_ID, dealerFirmIds: DEALERS.slice(0, 2) })).rejects.toThrow(/At least 3 dealers/);
   });
 
   it('rejects duplicate dealer IDs before DB writes', async () => {
