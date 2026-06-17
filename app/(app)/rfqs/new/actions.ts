@@ -22,7 +22,7 @@ import { recordEvent } from '@/lib/record-event';
 import { sendInvitation } from '@/lib/email';
 import { hasUniqueIds, MIN_RFQ_DEALERS } from '@/lib/panel-policy';
 import { generatePublicRef } from '@/lib/public-ref';
-import { cleanupStagedAttachments, stageAttachmentUpload, type StagedAttachment } from '@/lib/storage';
+import { attachmentAddedEvent, cleanupStagedAttachments, stageAttachmentUpload, type StagedAttachment } from '@/lib/storage';
 import { TEMPLATES, type TemplateId } from '@/lib/templates';
 
 const TEMPLATE_IDS = TEMPLATES.map((t) => t.id) as [TemplateId, ...TemplateId[]];
@@ -55,8 +55,7 @@ const LaunchRfqSchema = z.object({
 
 export type LaunchRfqInput = z.infer<typeof LaunchRfqSchema>;
 
-function parseLaunchInput(input: LaunchRfqInput | FormData): { payload: LaunchRfqInput; files: File[] } {
-  if (!(input instanceof FormData)) return { payload: input, files: [] };
+function parseLaunchInput(input: FormData): { payload: LaunchRfqInput; files: File[] } {
   const rawPayload = input.get('payload');
   if (typeof rawPayload !== 'string') throw new Error('Missing RFQ payload.');
   const files = input
@@ -76,7 +75,7 @@ function pad4(n: number): string {
   return String(n).padStart(4, '0');
 }
 
-export async function launchRfqAction(input: LaunchRfqInput | FormData): Promise<void> {
+export async function launchRfqAction(input: FormData): Promise<void> {
   const resolved = await resolveUser();
   if (resolved.kind !== 'user' || (resolved.role !== 'trader' && resolved.role !== 'admin')) {
     throw new Error('Only a trader can launch an RFQ.');
@@ -139,14 +138,13 @@ export async function launchRfqAction(input: LaunchRfqInput | FormData): Promise
 
   const stagedAttachments: StagedAttachment[] = [];
   try {
-    for (const file of files) {
-      stagedAttachments.push(await stageAttachmentUpload({
+    const staged = await Promise.all(files.map((file) => stageAttachmentUpload({
         firmId: caller.firmId,
         rfqId,
         uploadedByUserId: caller.userId,
         file,
-      }));
-    }
+      })));
+    stagedAttachments.push(...staged);
 
     await recordEvent(
       { kind: 'user', userId: caller.userId, label: caller.label },
@@ -167,18 +165,7 @@ export async function launchRfqAction(input: LaunchRfqInput | FormData): Promise
             attachmentIds: stagedAttachments.map((a) => a.id),
           },
         },
-        ...stagedAttachments.map((a) => ({
-          firmId: caller.firmId,
-          rfqId,
-          type: 'attachment_added' as const,
-          summary: `Added attachment — ${a.displayFilename}`,
-          detail: {
-            attachmentId: a.id,
-            filename: a.displayFilename,
-            mimeType: a.mimeType,
-            sizeBytes: a.sizeBytes,
-          },
-        })),
+        ...stagedAttachments.map((a) => attachmentAddedEvent(caller.firmId, rfqId, a)),
       ],
       async (tx) => {
         // Compute next per-firm, per-year sequence inside the tx for snapshot

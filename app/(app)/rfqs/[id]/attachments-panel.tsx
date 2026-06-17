@@ -2,12 +2,10 @@
 
 import { useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import { AttachmentList } from '@/components/attachment-list';
+import { ATTACHMENT_ACCEPT } from '@/lib/attachment-policy';
 import type { AttachmentWithUrl } from '@/lib/storage';
 import { uploadRfqAttachmentAction } from './actions';
-
-function fmtBytes(bytes: number): string {
-  return `${(bytes / 1024 / 1024).toFixed(2)} MB`;
-}
 
 export function AttachmentsPanel({
   rfqId,
@@ -48,19 +46,7 @@ export function AttachmentsPanel({
         <span className="note">PDF, CSV, XLSX · max 10 MB</span>
       </div>
       <hr className="hr" />
-      {attachments.length === 0 ? (
-        <div className="note">No attachments uploaded.</div>
-      ) : (
-        <div className="grid" style={{ gap: 8 }}>
-          {attachments.map((a) => (
-            <a key={a.id} className="checkrow" href={a.url} target="_blank" rel="noreferrer">
-              <span style={{ fontWeight: 600 }}>{a.filename}</span>
-              <span className="spacer" />
-              <span className="note">{fmtBytes(a.sizeBytes)}</span>
-            </a>
-          ))}
-        </div>
-      )}
+      <AttachmentList attachments={attachments} emptyText="No attachments uploaded." />
       {canUpload && (
         <div style={{ marginTop: 12 }}>
           <label className="fld">Add documents
@@ -68,7 +54,7 @@ export function AttachmentsPanel({
               ref={inputRef}
               type="file"
               multiple
-              accept="application/pdf,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+              accept={ATTACHMENT_ACCEPT}
             />
           </label>
           {error && <div className="flag flag-warn" style={{ marginTop: 10 }}>{error}</div>}

@@ -5,18 +5,20 @@ import { randomUUID } from 'node:crypto';
 import { and, eq } from 'drizzle-orm';
 import { db } from '@/db';
 import { attachments, rfqs } from '@/db/schema';
+import {
+  ALLOWED_ATTACHMENT_EXTENSIONS,
+  ALLOWED_ATTACHMENT_MIME_TYPES,
+  MAX_ATTACHMENT_BYTES,
+  attachmentExtension,
+} from '@/lib/attachment-policy';
 import type { Caller } from '@/lib/auth/caller';
 import { requireEnv } from '@/lib/env';
-import { recordEvent } from '@/lib/record-event';
+import { recordEvent, type EventInput } from '@/lib/record-event';
 import { createServiceRoleClient } from '@/lib/supabase/server';
 
-export const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024;
 export const SIGNED_URL_TTL_SECONDS = 300;
-export const ALLOWED_ATTACHMENT_MIME_TYPES = new Set([
-  'application/pdf',
-  'text/csv',
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-]);
+const ALLOWED_ATTACHMENT_MIME_SET = new Set(ALLOWED_ATTACHMENT_MIME_TYPES);
+const ALLOWED_ATTACHMENT_EXTENSION_SET = new Set(ALLOWED_ATTACHMENT_EXTENSIONS);
 
 export type AttachmentDto = {
   id: string;
@@ -49,7 +51,10 @@ type RfqForAttachment = {
 export function validateAttachmentFile(file: Pick<File, 'name' | 'type' | 'size'>) {
   if (file.size <= 0) throw new Error('Attachment is empty.');
   if (file.size > MAX_ATTACHMENT_BYTES) throw new Error('Attachment exceeds the 10 MB limit.');
-  if (!ALLOWED_ATTACHMENT_MIME_TYPES.has(file.type)) {
+  const allowedMime = ALLOWED_ATTACHMENT_MIME_SET.has(file.type as (typeof ALLOWED_ATTACHMENT_MIME_TYPES)[number]);
+  const ext = attachmentExtension(file.name);
+  const allowedExtension = ext ? ALLOWED_ATTACHMENT_EXTENSION_SET.has(ext as (typeof ALLOWED_ATTACHMENT_EXTENSIONS)[number]) : false;
+  if (!allowedMime && !allowedExtension) {
     throw new Error('Unsupported attachment type. Upload a PDF, CSV, or XLSX file.');
   }
 }
@@ -92,6 +97,21 @@ export function toAttachmentDto(row: typeof attachments.$inferSelect): Attachmen
   };
 }
 
+export function attachmentAddedEvent(firmId: string, rfqId: string, staged: StagedAttachment): EventInput {
+  return {
+    firmId,
+    rfqId,
+    type: 'attachment_added',
+    summary: `Added attachment — ${staged.displayFilename}`,
+    detail: {
+      attachmentId: staged.id,
+      filename: staged.displayFilename,
+      mimeType: staged.mimeType,
+      sizeBytes: staged.sizeBytes,
+    },
+  };
+}
+
 function bucketName(): string {
   return requireEnv('SUPABASE_STORAGE_BUCKET');
 }
@@ -122,7 +142,7 @@ export async function stageAttachmentUpload(args: {
   validateAttachmentFile(args.file);
   const id = randomUUID();
   const displayFilename = sanitizeFilename(args.file.name);
-  const storagePath = buildStoragePath(args.firmId, args.rfqId, displayFilename);
+  const storagePath = buildStoragePath(args.firmId, args.rfqId, args.file.name);
   await uploadObject(storagePath, args.file);
   return {
     id,
@@ -136,7 +156,7 @@ export async function stageAttachmentUpload(args: {
   };
 }
 
-export async function uploadAttachment(caller: Caller, rfqId: string, file: File): Promise<AttachmentDto> {
+export async function uploadAttachment(caller: Caller, rfqId: string, file: File): Promise<void> {
   const rfq = await db.query.rfqs.findFirst({ where: eq(rfqs.id, rfqId) });
   if (!rfq) throw new Error('RFQ not found.');
   if (!canUploadRfqAttachment(caller, rfq)) throw new Error('You cannot upload attachments for this RFQ.');
@@ -152,18 +172,7 @@ export async function uploadAttachment(caller: Caller, rfqId: string, file: File
   try {
     await recordEvent(
       { kind: 'user', userId: caller.userId, label: caller.label },
-      {
-        firmId: rfq.firmId,
-        rfqId: rfq.id,
-        type: 'attachment_added',
-        summary: `Added attachment — ${staged.displayFilename}`,
-        detail: {
-          attachmentId: staged.id,
-          filename: staged.displayFilename,
-          mimeType: staged.mimeType,
-          sizeBytes: staged.sizeBytes,
-        },
-      },
+      attachmentAddedEvent(rfq.firmId, rfq.id, staged),
       async (tx) => {
         await tx.insert(attachments).values(staged);
       },
@@ -173,9 +182,6 @@ export async function uploadAttachment(caller: Caller, rfqId: string, file: File
     throw e;
   }
 
-  const row = await db.query.attachments.findFirst({ where: eq(attachments.id, staged.id) });
-  if (!row) throw new Error('Attachment metadata was not saved.');
-  return toAttachmentDto(row);
 }
 
 export async function listAttachments(caller: Caller, rfqId: string): Promise<AttachmentDto[]> {
@@ -205,10 +211,23 @@ export async function signedUrl(caller: Caller, attachmentId: string): Promise<s
 }
 
 export async function listAttachmentsWithUrls(caller: Caller, rfqId: string): Promise<AttachmentWithUrl[]> {
-  const rows = await listAttachments(caller, rfqId);
-  const withUrls = await Promise.all(rows.map(async (row) => {
-    const url = await signedUrl(caller, row.id);
-    return url ? { ...row, url } : null;
-  }));
-  return withUrls.filter((row): row is AttachmentWithUrl => row !== null);
+  const rfq = await db.query.rfqs.findFirst({ where: eq(rfqs.id, rfqId) });
+  if (!rfq || !canReadRfqAttachments(caller, rfq)) return [];
+
+  const rows = await db
+    .select()
+    .from(attachments)
+    .where(and(eq(attachments.rfqId, rfqId), eq(attachments.firmId, rfq.firmId)));
+  if (!rows.length) return [];
+
+  const supabase = createServiceRoleClient();
+  const { data, error } = await supabase.storage
+    .from(bucketName())
+    .createSignedUrls(rows.map((row) => row.storagePath), SIGNED_URL_TTL_SECONDS);
+  if (error) throw new Error(`Could not sign attachment URLs: ${error.message}`);
+
+  return rows.flatMap((row, i) => {
+    const url = data?.[i]?.signedUrl;
+    return url ? [{ ...toAttachmentDto(row), url }] : [];
+  });
 }

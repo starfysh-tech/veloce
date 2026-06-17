@@ -6,7 +6,6 @@ vi.mock('@/lib/record-event', () => ({ recordEvent: vi.fn() }));
 vi.mock('@/lib/supabase/server', () => ({ createServiceRoleClient: vi.fn() }));
 
 import {
-  MAX_ATTACHMENT_BYTES,
   buildStoragePath,
   canReadRfqAttachments,
   canUploadRfqAttachment,
@@ -14,6 +13,7 @@ import {
   toAttachmentDto,
   validateAttachmentFile,
 } from './storage';
+import { MAX_ATTACHMENT_BYTES } from './attachment-policy';
 import type { attachments } from '@/db/schema';
 
 const owner: Caller = { kind: 'user', userId: 'u1', firmId: 'meridian', role: 'trader', label: 'Dana' };
@@ -68,6 +68,12 @@ describe('attachment validation and DTOs', () => {
     expect(() => validateAttachmentFile({ name: 'terms.pdf', type: 'application/pdf', size: 10 })).not.toThrow();
     expect(() => validateAttachmentFile({ name: 'basket.csv', type: 'text/csv', size: 10 })).not.toThrow();
     expect(() => validateAttachmentFile({ name: 'basket.xlsx', type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', size: 10 })).not.toThrow();
+  });
+
+  it('accepts allowed extensions when browser MIME is missing or generic', () => {
+    expect(() => validateAttachmentFile({ name: 'terms.pdf', type: '', size: 10 })).not.toThrow();
+    expect(() => validateAttachmentFile({ name: 'basket.csv', type: 'application/octet-stream', size: 10 })).not.toThrow();
+    expect(() => validateAttachmentFile({ name: 'basket.xlsx', type: 'application/octet-stream', size: 10 })).not.toThrow();
   });
 
   it('rejects empty, oversized, and unsupported files', () => {

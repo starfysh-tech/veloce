@@ -5,15 +5,12 @@
 // rank-only blind feedback. Never competitor identities, levels, or the
 // invited-dealer list.
 import { notFound } from 'next/navigation';
+import { AttachmentList } from '@/components/attachment-list';
 import { resolveDealerToken } from '@/lib/auth/caller';
 import { getDealerView } from '@/lib/queries/dealer-view';
 import { listAttachmentsWithUrls } from '@/lib/storage';
 import { Pill, notionalLabel } from '@/components/ui';
 import { DealerForm } from './form';
-
-function fmtBytes(bytes: number): string {
-  return `${(bytes / 1024 / 1024).toFixed(2)} MB`;
-}
 
 export default async function DealerQuotePage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
@@ -75,19 +72,7 @@ export default async function DealerQuotePage({ params }: { params: Promise<{ to
           <span className="note">Signed links expire shortly</span>
         </div>
         <hr className="hr" />
-        {attachments.length === 0 ? (
-          <div className="note">No documents attached.</div>
-        ) : (
-          <div className="grid" style={{ gap: 8 }}>
-            {attachments.map((a) => (
-              <a key={a.id} className="checkrow" href={a.url} target="_blank" rel="noreferrer">
-                <span style={{ fontWeight: 600 }}>{a.filename}</span>
-                <span className="spacer" />
-                <span className="note">{fmtBytes(a.sizeBytes)}</span>
-              </a>
-            ))}
-          </div>
-        )}
+        <AttachmentList attachments={attachments} emptyText="No documents attached." />
       </div>
 
       <div style={{ height: 16 }} />

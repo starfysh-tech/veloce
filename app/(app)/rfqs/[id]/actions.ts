@@ -179,7 +179,5 @@ export async function uploadRfqAttachmentAction(rfqId: string, formData: FormDat
     .filter((value): value is File => value instanceof File && value.size > 0);
   if (!files.length) throw new Error('Choose at least one attachment.');
 
-  for (const file of files) {
-    await uploadAttachment(caller, rfqId, file);
-  }
+  await Promise.all(files.map((file) => uploadAttachment(caller, rfqId, file)));
 }

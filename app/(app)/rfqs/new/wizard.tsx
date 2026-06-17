@@ -5,6 +5,7 @@
 'use client';
 
 import { useMemo, useState, useTransition } from 'react';
+import { ATTACHMENT_ACCEPT, fmtBytes } from '@/lib/attachment-policy';
 import { TEMPLATES, type TemplateId } from '@/lib/templates';
 import { launchRfqAction, type LaunchRfqInput } from './actions';
 import type { DealerOption, PanelOption } from './page';
@@ -357,7 +358,7 @@ export function Wizard({ panels, dealers }: { panels: PanelOption[]; dealers: De
             <input
               type="file"
               multiple
-              accept="application/pdf,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+              accept={ATTACHMENT_ACCEPT}
               onChange={(e) => setFiles(Array.from(e.target.files ?? []))}
             />
           </label>
@@ -370,7 +371,7 @@ export function Wizard({ panels, dealers }: { panels: PanelOption[]; dealers: De
                 <div key={`${file.name}-${file.size}`} className="checkrow">
                   <span style={{ fontWeight: 600 }}>{file.name}</span>
                   <span className="spacer" />
-                  <span className="note">{(file.size / 1024 / 1024).toFixed(2)} MB</span>
+                  <span className="note">{fmtBytes(file.size)}</span>
                 </div>
               ))}
             </div>
