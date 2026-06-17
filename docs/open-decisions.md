@@ -214,10 +214,13 @@ this end-to-end; Block D consumes the same `getDealerConcentration(firmId, asOf?
 executor?)` helper (`lib/queries/concentration.ts`). USD-only with `TODO(multi-ccy)`,
 counts all `tradeStatus` values, scoped via `trades.rfqId → rfqs.firmId`.
 
-### D-8. Block E — what (if anything) becomes editable
-Decision 22 is read-only admin with code comments marking future-editable sections.
-Confirm fully read-only for MVP (recommended), or pick one section (e.g. bank panels)
-to make editable. → decide at Block E.
+### D-8. Block E — what (if anything) becomes editable — ✅ RESOLVED
+**Decision: bank panels editable for functional MVP; all other admin sections remain
+read-only/TODO until they have real persistence and enforcement wiring.**
+Bank panels already drive Create RFQ, so edits are behaviorally real. Product templates
+and policy thresholds are code-backed (`lib/templates.ts`, `lib/policy.ts`), and user
+creation needs Supabase Auth handling, so those are deferred rather than shipped as
+no-op controls.
 
 ### D-9. Block F — Storage bucket layout & MIME/size limits
 Decision 12 + 24: real uploads, tenant-scoped paths, MIME/size validation only (no
