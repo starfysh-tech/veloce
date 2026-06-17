@@ -2,7 +2,7 @@
 // Bank panels are the first functional admin config surface because the RFQ
 // wizard already consumes them. Product templates and policy gates remain
 // code-backed/read-only until their enforcement paths read persisted config.
-import { asc, desc, eq, sql } from 'drizzle-orm';
+import { asc, desc, eq } from 'drizzle-orm';
 import { db } from '@/db';
 import { bankPanelMembers, bankPanels, events, firms, users } from '@/db/schema';
 import {
@@ -128,7 +128,7 @@ export function adminBankPanelsQuery(firmId: string) {
     .from(bankPanels)
     .leftJoin(bankPanelMembers, eq(bankPanelMembers.panelId, bankPanels.id))
     .where(eq(bankPanels.firmId, firmId))
-    .orderBy(sql`${bankPanels.isDefault} desc`, asc(bankPanels.name));
+    .orderBy(desc(bankPanels.isDefault), asc(bankPanels.name));
 }
 
 export function adminEventsQuery(firmId: string) {

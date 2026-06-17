@@ -248,6 +248,7 @@ export default function AdminClient({ overview }: { overview: AdminOverview }) {
               value={newName}
               onChange={(ev) => setNewName(ev.target.value)}
               placeholder="Panel name"
+              aria-label="New panel name"
               style={{ width: '100%', marginBottom: 10 }}
             />
             <DealerSelector dealers={overview.dealers} selectedIds={newDealerIds} onToggle={toggleNewDealer} />
