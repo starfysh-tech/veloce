@@ -38,23 +38,25 @@ export type EventInput = {
  */
 export async function recordEvent<T>(
   actor: Actor,
-  event: EventInput,
+  event: EventInput | EventInput[],
   apply: (tx: Tx) => Promise<T>,
 ): Promise<T> {
   return db.transaction(async (tx) => {
     const result = await apply(tx);
 
-    await tx.insert(events).values({
-      firmId: event.firmId,
-      rfqId: event.rfqId ?? null,
-      type: event.type,
+    const eventRows = (Array.isArray(event) ? event : [event]).map((e) => ({
+      firmId: e.firmId,
+      rfqId: e.rfqId ?? null,
+      type: e.type,
       actorUserId: actor.kind === 'user' ? actor.userId : null,
       actorDealerFirmId: actor.kind === 'dealer' ? actor.dealerFirmId : null,
       actorLabel:
         actor.kind === 'system' ? (actor.label ?? 'System') : actor.label,
-      summary: event.summary,
-      detail: (event.detail ?? null) as object | null,
-    });
+      summary: e.summary,
+      detail: (e.detail ?? null) as object | null,
+    }));
+
+    await tx.insert(events).values(eventRows);
 
     return result;
   });

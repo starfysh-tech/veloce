@@ -5,7 +5,7 @@
 // off this — never off client-supplied values.
 // ---------------------------------------------------------------------------
 import { createHash } from 'node:crypto';
-import { eq, and } from 'drizzle-orm';
+import { eq, and, inArray } from 'drizzle-orm';
 import { db } from '@/db';
 import { invitations, rfqs, users } from '@/db/schema';
 import { createClient } from '@/lib/supabase/server';
@@ -57,15 +57,15 @@ export async function resolveUser(): Promise<Caller> {
 
 /**
  * Resolve a dealer from an opaque capability token. The token authorizes
- * exactly one RFQ. Validity also requires the invitation be active and the
- * RFQ still live — enforced here so callers can't bypass it.
+ * exactly one RFQ. Read access remains valid after first response; write paths
+ * independently enforce live/deadline state before accepting quotes.
  */
 export async function resolveDealerToken(rawToken: string): Promise<Caller> {
   const tokenHash = hashToken(rawToken);
   const inv = await db.query.invitations.findFirst({
     where: and(
       eq(invitations.tokenHash, tokenHash),
-      eq(invitations.status, 'pending'),
+      inArray(invitations.status, ['pending', 'responded']),
     ),
   });
   if (!inv) return { kind: 'anonymous' };

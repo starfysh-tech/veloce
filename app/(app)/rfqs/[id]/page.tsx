@@ -5,7 +5,9 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { resolveUser } from '@/lib/auth/caller';
 import { getBoard } from '@/lib/queries/board';
-import { Pill, notionalLabel, fmtPrice } from '@/components/ui';
+import { canUploadRfqAttachment, listAttachmentsWithUrls } from '@/lib/storage';
+import { Pill, notionalLabel } from '@/components/ui';
+import { AttachmentsPanel } from './attachments-panel';
 import { QuoteBoardLive } from './board-live';
 
 export default async function RfqDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -16,6 +18,7 @@ export default async function RfqDetailPage({ params }: { params: Promise<{ id: 
   const data = await getBoard(caller, id);
   if (!data) notFound();
   const { rfq, board, comparison, award, dealers, invitedCount } = data;
+  const attachments = await listAttachmentsWithUrls(caller, rfq.id);
 
   return (
     <>
@@ -49,6 +52,12 @@ export default async function RfqDetailPage({ params }: { params: Promise<{ id: 
           ))}
         </div>
       </div>
+
+      <AttachmentsPanel
+        rfqId={rfq.id}
+        attachments={attachments}
+        canUpload={canUploadRfqAttachment(caller, rfq)}
+      />
 
       <QuoteBoardLive
         rfqId={rfq.id}

@@ -1,6 +1,6 @@
 // app/(app)/rfqs/new/actions.ts — launch a new RFQ.
-// One rfq_launched event via recordEvent(); the invited-dealer list lives in
-// that event's detail.invitedDealerIds for audit.
+// Launch state and optional attachment metadata are committed with audit events
+// through recordEvent(); dealer emails are dispatched only after commit.
 'use server';
 
 import { randomBytes, randomUUID } from 'node:crypto';
@@ -13,6 +13,7 @@ import {
   bankPanelMembers,
   firms,
   invitations,
+  attachments,
   rfqInvitedDealers,
   rfqs,
 } from '@/db/schema';
@@ -21,6 +22,7 @@ import { recordEvent } from '@/lib/record-event';
 import { sendInvitation } from '@/lib/email';
 import { hasUniqueIds, MIN_RFQ_DEALERS } from '@/lib/panel-policy';
 import { generatePublicRef } from '@/lib/public-ref';
+import { attachmentAddedEvent, cleanupStagedAttachments, stageAttachmentUpload, type StagedAttachment } from '@/lib/storage';
 import { TEMPLATES, type TemplateId } from '@/lib/templates';
 
 const TEMPLATE_IDS = TEMPLATES.map((t) => t.id) as [TemplateId, ...TemplateId[]];
@@ -53,6 +55,15 @@ const LaunchRfqSchema = z.object({
 
 export type LaunchRfqInput = z.infer<typeof LaunchRfqSchema>;
 
+function parseLaunchInput(input: FormData): { payload: LaunchRfqInput; files: File[] } {
+  const rawPayload = input.get('payload');
+  if (typeof rawPayload !== 'string') throw new Error('Missing RFQ payload.');
+  const files = input
+    .getAll('attachments')
+    .filter((value): value is File => value instanceof File && value.size > 0);
+  return { payload: JSON.parse(rawPayload) as LaunchRfqInput, files };
+}
+
 // Slugified dealer email. Collision handling (e.g. +digit suffix) deferred —
 // no real collisions in current seed.
 function dealerEmailFor(name: string): string {
@@ -64,7 +75,7 @@ function pad4(n: number): string {
   return String(n).padStart(4, '0');
 }
 
-export async function launchRfqAction(input: LaunchRfqInput): Promise<void> {
+export async function launchRfqAction(input: FormData): Promise<void> {
   const resolved = await resolveUser();
   if (resolved.kind !== 'user' || (resolved.role !== 'trader' && resolved.role !== 'admin')) {
     throw new Error('Only a trader can launch an RFQ.');
@@ -72,7 +83,8 @@ export async function launchRfqAction(input: LaunchRfqInput): Promise<void> {
   // Pin the narrowed shape so closures below keep type info.
   const caller = resolved;
 
-  const parsed = LaunchRfqSchema.parse(input);
+  const { payload, files } = parseLaunchInput(input);
+  const parsed = LaunchRfqSchema.parse(payload);
 
   // Validate panel belongs to this firm.
   const panel = await db.query.bankPanels.findFirst({
@@ -124,87 +136,109 @@ export async function launchRfqAction(input: LaunchRfqInput): Promise<void> {
   const year = now.getUTCFullYear();
   const refPrefix = `VEL-${year}-`;
 
-  await recordEvent(
-    { kind: 'user', userId: caller.userId, label: caller.label },
-    {
-      firmId: caller.firmId,
-      rfqId,
-      type: 'rfq_launched',
-      summary: `Launched ${publicRef} — ${parsed.title}`,
-      detail: {
-        publicRef,
-        template: parsed.template,
-        panelId: parsed.panelId,
-        invitedDealerIds: parsed.invited,
-        notionalMinor,
-        ccy: parsed.ccy,
-        windowMinutes: parsed.windowMinutes,
-      },
-    },
-    async (tx) => {
-      // Compute next per-firm, per-year sequence inside the tx for snapshot
-      // consistency. Drizzle sql template precedent: lib/queries/rfqs.ts:4.
-      async function nextRef(): Promise<string> {
-        const rows = await tx.execute<{ max_seq: number | null }>(
-          sql`select max(cast(substring(${rfqs.ref} from ${refPrefix.length + 1}) as int)) as max_seq
-              from ${rfqs}
-              where ${rfqs.firmId} = ${caller.firmId} and ${rfqs.ref} like ${refPrefix + '%'}`,
-        );
-        const maxSeq = rows[0]?.max_seq ?? 0;
-        return refPrefix + pad4(maxSeq + 1);
-      }
-
-      // Single insert. On the astronomically-rare (firm_id, ref) race the
-      // uniqueIndex will throw 23505 to the user, who clicks Launch again.
-      const ref = await nextRef();
-      await tx.insert(rfqs).values({
-        id: rfqId,
-        ref,
-        publicRef,
+  const stagedAttachments: StagedAttachment[] = [];
+  try {
+    const staged = await Promise.all(files.map((file) => stageAttachmentUpload({
         firmId: caller.firmId,
-        requesterId: caller.userId,
-        title: parsed.title,
-        product: parsed.product,
-        template: parsed.template,
-        side: parsed.side,
-        underlying: parsed.underlying,
-        refLevel: parsed.refLevel,
-        strike: parsed.strike,
-        expiry: parsed.expiry,
-        style: parsed.style,
-        tenor: parsed.tenor,
-        notionalMinor,
-        ccy: parsed.ccy,
-        quoteUnit: parsed.quoteUnit,
-        lowerIsBetter: true,
-        mode: parsed.mode,
-        blind: parsed.blind,
-        status: 'live',
-        deadline,
-        windowMinutes: parsed.windowMinutes,
-        launchedAt: now,
-      });
+        rfqId,
+        uploadedByUserId: caller.userId,
+        file,
+      })));
+    stagedAttachments.push(...staged);
 
-      // Snapshot panel membership.
-      await tx.insert(rfqInvitedDealers).values(
-        parsed.invited.map((dealerFirmId) => ({ rfqId, dealerFirmId })),
-      );
+    await recordEvent(
+      { kind: 'user', userId: caller.userId, label: caller.label },
+      [
+        {
+          firmId: caller.firmId,
+          rfqId,
+          type: 'rfq_launched',
+          summary: `Launched ${publicRef} — ${parsed.title}`,
+          detail: {
+            publicRef,
+            template: parsed.template,
+            panelId: parsed.panelId,
+            invitedDealerIds: parsed.invited,
+            notionalMinor,
+            ccy: parsed.ccy,
+            windowMinutes: parsed.windowMinutes,
+            attachmentIds: stagedAttachments.map((a) => a.id),
+          },
+        },
+        ...stagedAttachments.map((a) => attachmentAddedEvent(caller.firmId, rfqId, a)),
+      ],
+      async (tx) => {
+        // Compute next per-firm, per-year sequence inside the tx for snapshot
+        // consistency. Drizzle sql template precedent: lib/queries/rfqs.ts:4.
+        async function nextRef(): Promise<string> {
+          const rows = await tx.execute<{ max_seq: number | null }>(
+            sql`select max(cast(substring(${rfqs.ref} from ${refPrefix.length + 1}) as int)) as max_seq
+                from ${rfqs}
+                where ${rfqs.firmId} = ${caller.firmId} and ${rfqs.ref} like ${refPrefix + '%'}`,
+          );
+          const maxSeq = rows[0]?.max_seq ?? 0;
+          return refPrefix + pad4(maxSeq + 1);
+        }
 
-      // Insert invitations with hashed tokens.
-      await tx.insert(invitations).values(
-        parsed.invited.map((dealerFirmId) => {
-          const pm = premintByDealer.get(dealerFirmId)!;
-          return {
-            id: randomUUID(),
-            rfqId,
-            dealerFirmId,
-            tokenHash: hashToken(pm.raw),
-            dealerEmail: pm.email,
-          };
-        }),
-      );
-    },
-  );
+        // Single insert. On the astronomically-rare (firm_id, ref) race the
+        // uniqueIndex will throw 23505 to the user, who clicks Launch again.
+        const ref = await nextRef();
+        await tx.insert(rfqs).values({
+          id: rfqId,
+          ref,
+          publicRef,
+          firmId: caller.firmId,
+          requesterId: caller.userId,
+          title: parsed.title,
+          product: parsed.product,
+          template: parsed.template,
+          side: parsed.side,
+          underlying: parsed.underlying,
+          refLevel: parsed.refLevel,
+          strike: parsed.strike,
+          expiry: parsed.expiry,
+          style: parsed.style,
+          tenor: parsed.tenor,
+          notionalMinor,
+          ccy: parsed.ccy,
+          quoteUnit: parsed.quoteUnit,
+          lowerIsBetter: true,
+          mode: parsed.mode,
+          blind: parsed.blind,
+          status: 'live',
+          deadline,
+          windowMinutes: parsed.windowMinutes,
+          launchedAt: now,
+        });
+
+        // Snapshot panel membership.
+        await tx.insert(rfqInvitedDealers).values(
+          parsed.invited.map((dealerFirmId) => ({ rfqId, dealerFirmId })),
+        );
+
+        // Insert invitations with hashed tokens.
+        await tx.insert(invitations).values(
+          parsed.invited.map((dealerFirmId) => {
+            const pm = premintByDealer.get(dealerFirmId)!;
+            return {
+              id: randomUUID(),
+              rfqId,
+              dealerFirmId,
+              tokenHash: hashToken(pm.raw),
+              dealerEmail: pm.email,
+            };
+          }),
+        );
+
+        if (stagedAttachments.length) {
+          await tx.insert(attachments).values(stagedAttachments);
+        }
+      },
+    );
+  } catch (e) {
+    await cleanupStagedAttachments(stagedAttachments);
+    throw e;
+  }
 
   // Post-commit: dispatch emails in parallel. lib/email.ts swallows errors
   // internally (documented MVP gap), so Promise.all never rejects here.

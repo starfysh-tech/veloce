@@ -5,9 +5,11 @@
 // rank-only blind feedback. Never competitor identities, levels, or the
 // invited-dealer list.
 import { notFound } from 'next/navigation';
+import { AttachmentList } from '@/components/attachment-list';
 import { resolveDealerToken } from '@/lib/auth/caller';
 import { getDealerView } from '@/lib/queries/dealer-view';
-import { Pill, notionalLabel, fmtPrice } from '@/components/ui';
+import { listAttachmentsWithUrls } from '@/lib/storage';
+import { Pill, notionalLabel } from '@/components/ui';
 import { DealerForm } from './form';
 
 export default async function DealerQuotePage({ params }: { params: Promise<{ token: string }> }) {
@@ -18,6 +20,7 @@ export default async function DealerQuotePage({ params }: { params: Promise<{ to
   const view = await getDealerView(caller, caller.rfqId);
   if (!view) notFound();
   const { rfq, own, dealerFirm, isOpen } = view;
+  const attachments = await listAttachmentsWithUrls(caller, caller.rfqId);
 
   return (
     <div style={{ maxWidth: 920, margin: '0 auto', padding: '28px 20px' }}>
@@ -58,6 +61,18 @@ export default async function DealerQuotePage({ params }: { params: Promise<{ to
             <div key={l as string}><div className="s-label">{l}</div><div className="s-val">{v}</div></div>
           ))}
         </div>
+      </div>
+
+      <div style={{ height: 16 }} />
+
+      <div className="card">
+        <div className="row">
+          <h3 style={{ margin: 0 }}>Documents</h3>
+          <span className="spacer" />
+          <span className="note">Signed links expire shortly</span>
+        </div>
+        <hr className="hr" />
+        <AttachmentList attachments={attachments} emptyText="No documents attached." />
       </div>
 
       <div style={{ height: 16 }} />

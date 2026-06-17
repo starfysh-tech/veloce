@@ -17,7 +17,7 @@
 - Post-approval state validator: `npx tsx --env-file-if-exists=.env scripts/validate-block-b.ts` after manually approving `rfq:0141` in the browser.
 
 ## Environment
-- Required server/runtime vars: `DATABASE_URL`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` for seed, `RESEND_FROM`, `NEXT_PUBLIC_SITE_URL`; `RESEND_API_KEY` is optional locally.
+- Required server/runtime vars: `DATABASE_URL`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` for seed/Storage, `SUPABASE_STORAGE_BUCKET`, `RESEND_FROM`, `NEXT_PUBLIC_SITE_URL`; `RESEND_API_KEY` is optional locally.
 - `db/index.ts` requires `DATABASE_URL` and uses `postgres(..., { prepare: false })` for the Supabase transaction pooler.
 - Use `requireEnv()` from `lib/env.ts` for server env reads that must fail clearly.
 
