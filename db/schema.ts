@@ -48,6 +48,7 @@ export const eventType = pgEnum('event_type', [
   'award_recommended', 'award_approved', 'award_rejected', 'clarification_requested',
   'trade_captured', 'handoff_sent', 'handoff_advanced',
   'exception_opened', 'exception_closed',
+  'bank_panel_updated',
 ]);
 
 // --------------------------------------------------------------- firms
