@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Glossary — Veloce</title>
+  <link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><b>VELOCE</b><span>FINANCIAL TECHNOLOGIES</span></div>
+    <nav class="topnav">
+      <a href="index.html">Overview</a>
+      <a href="how-it-works.html">How it works</a>
+      <a href="user-guide.html">User guide</a>
+      <a href="demo.html">Try the demo</a>
+      <a href="roadmap.html">Roadmap</a>
+      <a href="formation.html">Company</a>
+      <a href="glossary.html" class="active">Glossary</a>
+    </nav>
+  </header>
+
+  <main>
+    <div class="hero">
+      <p class="eyebrow">Reference</p>
+      <h1>Glossary</h1>
+      <p class="lede">Key terms as used in the Veloce platform, written for a reader without a derivatives background.</p>
+    </div>
+
+    <section>
+      <table>
+        <thead>
+          <tr>
+            <th>Term</th>
+            <th>Definition</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>RFQ</strong></td>
+            <td>Request for Quote — the buy-side firm's formal solicitation sent to one or more dealers asking them to price a specific trade.</td>
+          </tr>
+          <tr>
+            <td><strong>OTC equity derivative</strong></td>
+            <td>A privately negotiated contract whose value is derived from an equity index or basket, traded directly between two parties rather than on a public exchange.</td>
+          </tr>
+          <tr>
+            <td><strong>Auction</strong></td>
+            <td>In Veloce, a time-boxed competitive process in which multiple dealers submit quotes for the same RFQ; the platform surfaces the best price to the buy-side desk for award.</td>
+          </tr>
+          <tr>
+            <td><strong>Dealer / Bank</strong></td>
+            <td>A financial institution (typically an investment bank) that prices and takes the other side of the trade; in Veloce, dealers respond to auctions via a one-time magic link rather than a standing account.</td>
+          </tr>
+          <tr>
+            <td><strong>Best execution</strong></td>
+            <td>The obligation to obtain the most favorable terms reasonably available when executing a trade on a client's behalf; Veloce records the full quote board and award rationale to support this audit trail.</td>
+          </tr>
+          <tr>
+            <td><strong>STP</strong></td>
+            <td>Straight-Through Processing — automated transmission of trade details from execution directly into downstream systems (OMS, custodian, clearinghouse) without manual re-keying.</td>
+          </tr>
+          <tr>
+            <td><strong>Affirmation</strong></td>
+            <td>The post-execution step in which both the buy-side and the dealer formally confirm that the trade terms match; in Veloce this is the Ops role's task after award.</td>
+          </tr>
+          <tr>
+            <td><strong>Concentration</strong></td>
+            <td>The degree to which a portfolio's notional exposure is clustered in a small number of dealers or instruments; Veloce surfaces concentration metrics to the Compliance role as a risk governance tool.</td>
+          </tr>
+          <tr>
+            <td><strong>Notional</strong></td>
+            <td>The face-value size of a derivative trade — the reference amount on which payoffs are calculated, not the premium paid upfront.</td>
+          </tr>
+          <tr>
+            <td><strong>Blind auction</strong></td>
+            <td>An auction format in which competing dealers cannot see each other's quotes during the live phase; Veloce enforces this by serving each dealer a masked view of the quote board.</td>
+          </tr>
+          <tr>
+            <td><strong>Capability token</strong></td>
+            <td>A short-lived, opaque credential issued to a dealer for a single RFQ; it grants access to that auction's quoting interface without requiring a platform account or password.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  </main>
+
+  <footer>
+    Veloce Financial Technologies · Confidential — shared under NDA ·
+    Parallel-run pilot, mock data, no live trading.
+  </footer>
+</body>
+</html>
