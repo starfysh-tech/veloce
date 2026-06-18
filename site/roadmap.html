@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Roadmap — Veloce</title>
+  <link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><b>VELOCE</b><span>FINANCIAL TECHNOLOGIES</span></div>
+    <nav class="topnav">
+      <a href="index.html">Overview</a>
+      <a href="how-it-works.html">How it works</a>
+      <a href="user-guide.html">User guide</a>
+      <a href="demo.html">Try the demo</a>
+      <a href="roadmap.html" class="active">Roadmap</a>
+      <a href="formation.html">Company</a>
+      <a href="glossary.html">Glossary</a>
+    </nav>
+  </header>
+
+  <main>
+    <div class="hero">
+      <p class="eyebrow">MVP → Commercial</p>
+      <h1>Roadmap</h1>
+      <p class="lede">The MVP is a functional parallel-run pilot. Almost every deferral that made it shippable becomes a requirement for commercial use. The roadmap is structured as four tracks ordered by what unblocks revenue, not by what is easiest to build.</p>
+    </div>
+
+    <section>
+      <div class="grid">
+
+        <div class="card">
+          <p class="eyebrow">Track 1</p>
+          <h3>Regulatory &amp; Legal</h3>
+          <p>
+            The highest-lead-time item and the gate for everything downstream. Whether the platform's price-forming multi-dealer auction requires venue registration is an open question being taken to securities counsel — the answer depends on the instrument mix and cannot be determined without a specialist legal ruling. This track cannot be accelerated by engineering; it starts with counsel, not code.
+          </p>
+          <p class="small muted">Longest lead time · gates Track 3 venue work</p>
+        </div>
+
+        <div class="card">
+          <p class="eyebrow">Track 2</p>
+          <h3>Security &amp; Trust</h3>
+          <p>
+            No institutional buy-side firm approves a vendor without a credible security posture. This track covers SOC 2 Type II (observation window starts immediately), third-party penetration testing, secrets management, auth hardening, and demonstrable tenant isolation. It runs in parallel with Track 1 because both are calendar-bound in ways engineering is not.
+          </p>
+          <p class="small muted">Runs in parallel with Track 1 · gates enterprise procurement</p>
+        </div>
+
+        <div class="card">
+          <p class="eyebrow">Track 3</p>
+          <h3>Product Depth</h3>
+          <p>
+            Real STP connectivity, configurable multi-firm approval chains, FX-normalized exposure, and full multi-tenant onboarding — the documented gaps the pilot deferred. Sequenced by what the first paying design partner actually blocks on, not by what is tractable to build. STP and governance specs are held pending the Track 1 ruling, since a venue classification changes their requirements.
+          </p>
+          <p class="small muted">Partially gated by Track 1 · sequenced by design-partner pull</p>
+        </div>
+
+        <div class="card">
+          <p class="eyebrow">Track 4</p>
+          <h3>Scale &amp; Operations</h3>
+          <p>
+            Observability, incident response, disaster recovery, and database load validation. A regulated venue handling real trade data needs an operational posture, not just a green deploy. This track must precede revenue dependence, but does not gate the pilot or a partner demo.
+          </p>
+          <p class="small muted">Before revenue dependence · does not gate pilot</p>
+        </div>
+
+      </div>
+    </section>
+
+    <p class="small muted">Full detail, cross-references, and item-level evidence in <code>docs/ROADMAP.md</code>.</p>
+  </main>
+
+  <footer>
+    Veloce Financial Technologies · Confidential — shared under NDA ·
+    Parallel-run pilot, mock data, no live trading.
+  </footer>
+</body>
+</html>

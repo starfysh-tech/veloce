@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Try the Demo — Veloce</title>
+  <link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><b>VELOCE</b><span>FINANCIAL TECHNOLOGIES</span></div>
+    <nav class="topnav">
+      <a href="index.html">Overview</a>
+      <a href="how-it-works.html">How it works</a>
+      <a href="user-guide.html">User guide</a>
+      <a href="demo.html" class="active">Try the demo</a>
+      <a href="roadmap.html">Roadmap</a>
+      <a href="formation.html">Company</a>
+      <a href="glossary.html">Glossary</a>
+    </nav>
+  </header>
+
+  <main>
+    <div class="hero">
+      <p class="eyebrow">Live Environment</p>
+      <h1>Try the Demo</h1>
+      <p class="lede">A fully functional RFQ/auction platform running on mock data. No live trading; no real counterparties.</p>
+    </div>
+
+    <div class="warnbox" style="">
+      <strong>Pilot disclaimer.</strong> This is a parallel-run pilot environment populated entirely with mock data. It does not connect to any live trading system, real counterparty, or execution venue. No trades are executed. All figures are illustrative only.
+    </div>
+
+    <section>
+      <h2>Access the demo</h2>
+      <p>
+        <a href="https://mvp-veloce.vercel.app/login" target="_blank" rel="noopener noreferrer">https://mvp-veloce.vercel.app/login</a>
+      </p>
+      <p class="note">
+        The password protecting <em>this site</em> is separate from the demo login credentials below. You receive the site passphrase out-of-band from the Veloce team.
+      </p>
+    </section>
+
+    <section>
+      <h2>Seeded demo accounts</h2>
+      <p>All accounts share the password <code>veloce-ft</code>.</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Role</th>
+            <th>Email</th>
+            <th>Firm</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Dana Whitfield</td>
+            <td><span class="pill">Trader</span></td>
+            <td><code>dana@meridian.example</code></td>
+            <td>Meridian</td>
+          </tr>
+          <tr>
+            <td>Marcus Oyelaran</td>
+            <td><span class="pill">Approver</span></td>
+            <td><code>marcus@meridian.example</code></td>
+            <td>Meridian</td>
+          </tr>
+          <tr>
+            <td>Tomás Ferreira</td>
+            <td><span class="pill">Ops</span></td>
+            <td><code>tomas@meridian.example</code></td>
+            <td>Meridian</td>
+          </tr>
+          <tr>
+            <td>Ingrid Sørensen</td>
+            <td><span class="pill">Compliance</span></td>
+            <td><code>ingrid@meridian.example</code></td>
+            <td>Meridian</td>
+          </tr>
+          <tr>
+            <td>Alex Kim</td>
+            <td><span class="pill">Admin</span></td>
+            <td><code>alex@meridian.example</code></td>
+            <td>Meridian</td>
+          </tr>
+          <tr>
+            <td>Priya Krishnan</td>
+            <td><span class="pill">Ops</span></td>
+            <td><code>priya@halcyon.example</code></td>
+            <td>Halcyon (second firm)</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Guided tour</h2>
+      <p>Follow this sequence to walk through the full workflow end-to-end.</p>
+      <ol>
+        <li><strong>Dana (Trader)</strong> — log in and launch a new RFQ. Set terms, select dealers, and submit for approval.</li>
+        <li><strong>Marcus (Approver)</strong> — review the pending RFQ and approve it to release to dealers.</li>
+        <li><strong>Tomás (Ops)</strong> — once the auction closes and a dealer is awarded, capture the trade and affirm it.</li>
+        <li><strong>Ingrid (Compliance)</strong> — review the best-execution record and concentration dashboard.</li>
+        <li><strong>Alex (Admin)</strong> — explore firm administration: bank panels, user management, audit views.</li>
+        <li><strong>Priya (Halcyon)</strong> — log in as a user of the second firm. Verify that Meridian's RFQs and data are not visible — this confirms tenant isolation.</li>
+      </ol>
+    </section>
+
+    <section>
+      <h2>How dealers participate</h2>
+      <p>
+        Dealers do not hold platform accounts. When an RFQ is released, each invited dealer receives a one-time magic link scoped to that specific auction. Following the link opens a blinded quoting interface — no login required, no cross-RFQ visibility. The buy-side desk shares the link directly with the dealer contact.
+      </p>
+    </section>
+  </main>
+
+  <footer>
+    Veloce Financial Technologies · Confidential — shared under NDA ·
+    Parallel-run pilot, mock data, no live trading.
+  </footer>
+</body>
+</html>
