@@ -12,7 +12,7 @@ export async function signInWithPassword(formData: FormData) {
   if (error) {
     redirect(`/login?error=${encodeURIComponent(error.message)}`);
   }
-  redirect('/rfqs');
+  redirect('/dashboard');
 }
 
 export async function signInWithMagicLink(formData: FormData) {
