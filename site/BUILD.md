@@ -54,18 +54,24 @@ npx serve _site-preview
 
 ---
 
-## Security limitation — linked assets are NOT encrypted
+## Asset gating — screenshots are auto-inlined
 
-> **StatiCrypt encrypts only the HTML files.** Anything referenced by `<link>`, `<img>`, `<script>`, etc. is served as plain public files on GitHub Pages.
+StatiCrypt encrypts only the HTML files; anything referenced by `<img>`/`<link>` would
+otherwise be served as a plain public file on Pages. The build closes that gap
+automatically:
 
-Concretely:
-- `assets/site.css` — **publicly readable** (no auth required).
-- `images/*.png` (or any file under `site/images/`) — **publicly readable**. Anyone who guesses or discovers a URL can fetch the image without entering the password.
+- **`scripts/inline-site-images.mjs`** runs in the deploy workflow (and in
+  `npm run site:encrypt`) *before* StatiCrypt. It rewrites every
+  `<img src="images/…">` into a base64 **WebP** data-URI embedded in the HTML, then
+  deletes the `images/` dir and the internal-only files (`_template.html`, `SHOTS.md`,
+  `BUILD.md`) from the build output. So the screenshots ship **inside** the encrypted
+  HTML — not as public files.
+- CI installs `sharp` for PNG → WebP compression. Locally (no `sharp`) the script
+  falls back to inlining the original PNG bytes — correct, just larger — so previews
+  still work.
+- **`assets/site.css` remains public** by design — it's presentation only and reveals
+  nothing. If that ever changes, inline it too.
 
-**Mitigation for sensitive screenshots:** Inline images as base64 data-URIs inside the HTML:
-
-```html
-<img src="data:image/png;base64,iVBORw0KGgo..." alt="Screenshot" />
-```
-
-A base64-inlined image is embedded in the encrypted HTML, so it is protected by StatiCrypt. Images that are acceptable to be public (logos, generic icons) can remain as regular `<img src="images/...">` references.
+Authoring stays simple: reference screenshots normally as `<img src="images/name.png">`.
+The inline step handles gating at build time; the source HTML stays readable and the
+`site:preview` (unencrypted) view still loads the images from disk.

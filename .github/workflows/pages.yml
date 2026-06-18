@@ -32,6 +32,15 @@ jobs:
       - name: Copy site to build dir
         run: cp -r site _site
 
+      - name: Install sharp (for PNG → WebP inlining)
+        run: npm install --no-save sharp
+
+      - name: Inline screenshots into HTML
+        # StatiCrypt encrypts HTML only; linked images would be served publicly.
+        # Inline them (as WebP data-URIs) into the HTML so they're encrypted too,
+        # then drop the now-unreferenced images/ dir + internal files from _site.
+        run: node scripts/inline-site-images.mjs _site
+
       - name: Encrypt HTML files with StatiCrypt
         # STATICRYPT_PASSWORD is read from env automatically by staticrypt v3.
         # We pass the secret via env: so it never appears on the command line.
