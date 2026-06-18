@@ -17,10 +17,10 @@ verified ground truth:
    returns a Promise; SQL builders also exported for tests):
    - `lib/queries/rfqs.ts` — `listRfqs(firmId)` → rows (ref, title, product, status,
      notionalLabel, quoteCount, invitedCount, deadline…); `getRfq(firmId, rfqId)`. → trader KPIs.
-   - `lib/queries/approvals.ts` — `getApprovalQueue(firmId)` (awaiting_approval + award + open
+   - `lib/queries/approvals.ts` — `getApprovalQueue(firmId)` (awaiting_approval, award, and open
      exceptions); `getApprovalDetail(firmId, rfqId)`. → approver KPIs.
    - `lib/queries/ops.ts` — `getOpsTrades(firmId)` (awarded trades by status); `getOpsHandoffs(firmId)`
-     (handoffs + legs + open exceptions). → ops KPIs.
+     (handoffs, legs, and open exceptions). → ops KPIs.
    - `lib/queries/compliance.ts` — `getComplianceOverview(firmId)` → `{bestEx[], events[],
      exceptions[], concentration[]}` (calls concentration internally). → compliance KPIs.
    - `lib/queries/concentration.ts` — `getDealerConcentration(firmId, asOf?)` → trailing-90d
@@ -33,14 +33,14 @@ verified ground truth:
    `fmtPrice`, `fmtDateTime`, `notionalLabel`, `Pill({status})`, `statusLabel(status)`,
    `Icon({name})` — a `grid` icon already exists for the dashboard nav link. Reuse these; don't
    reformat money by hand (integer-minor-unit rules live here).
-4. **Nav + landing integration** (`app/(app)/layout.tsx`, `app/page.tsx`, login/callback routes):
+4. **Nav and landing integration** (`app/(app)/layout.tsx`, `app/page.tsx`, login/callback routes):
    the `NAV` record spans lines `9–31` (per-role link arrays); line `37` resolves
    `NAV[caller.role] ?? NAV.trader`. Add a `/dashboard` entry to each role's array and make
    `/dashboard` the root/login/callback landing.
-5. **Every role has a seeded login + non-empty KPIs** (8 RFQs / 2 firms): trader `dana@meridian`
-   (1 live auction, 1 draft), approver `marcus@meridian` (1 queue item + open exception), ops
-   `tomas@meridian` (1 in_stp + sent handoff + SSI exception) / `priya@halcyon` (1 captured
-   trade), compliance `ingrid@meridian` (open exception + reviewable RFQs), admin `alex@meridian`
+5. **Every role has a seeded login and non-empty KPIs** (8 RFQs / 2 firms): trader `dana@meridian`
+   (1 live auction, 1 draft), approver `marcus@meridian` (1 queue item and open exception), ops
+   `tomas@meridian` (1 in_stp, sent handoff, and SSI exception) / `priya@halcyon` (1 captured
+   trade), compliance `ingrid@meridian` (open exception and reviewable RFQs), admin `alex@meridian`
    (5 users, 3 panels, 5 dealers, event log). No role renders empty.
 6. **From Block F (if a dashboard shows attachment counts):** no soft-delete and no
    `attachment_downloaded` event — derive counts from the `attachment_added` event log or
@@ -54,8 +54,8 @@ sixth panel). No new data surfaces; read what Blocks A–F already expose.
 
 ## Read first (grounding)
 
-- POC: `_legacy/views/Dashboard.jsx` (the role panels + KPI/task shapes).
-- Role-aware nav + where a dashboard route plugs in: `app/(app)/layout.tsx` (`NAV` at 9–31,
+- POC: `_legacy/views/Dashboard.jsx` (the role panels and KPI/task shapes).
+- Role-aware nav and where a dashboard route plugs in: `app/(app)/layout.tsx` (`NAV` at 9–31,
   role lookup at line 37).
 - Existing tenant-scoped reads to reuse/compose: `lib/queries/rfqs.ts`,
   `lib/queries/approvals.ts` (Block B), `lib/queries/ops.ts` (Block C),
@@ -65,7 +65,7 @@ sixth panel). No new data surfaces; read what Blocks A–F already expose.
 
 ## Build (one commit each)
 
-1. Landing + nav — add `{ href: '/dashboard', label: 'Dashboard', icon: 'grid' }` to each of the
+1. Landing and nav — add `{ href: '/dashboard', label: 'Dashboard', icon: 'grid' }` to each of the
    five buy-side role nav arrays, and change root/login/callback redirects from `/rfqs` to
    `/dashboard` (`app/page.tsx`, `app/login/actions.ts`, `app/auth/callback/route.ts`).
 2. `lib/queries/dashboard.ts` — thin role-scoped composition only. Fetch **only the current
