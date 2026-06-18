@@ -1,9 +1,10 @@
-# Veloce MVP — Engineering Handoff (Remaining Work)
+# Veloce MVP — Engineering Handoff (A–G complete)
 
-> Source of truth for the remaining MVP build. Locked decisions are **binding** —
-> surface conflicts, don't silently deviate. Per-block starter prompts live in
-> `docs/blocks/`. Cross-cutting choices still needing Randall's direction live in
-> `docs/open-decisions.md`.
+> Source of truth for the MVP build. **All blocks A–G are shipped and merged to `main`;
+> a post-merge decision-consistency review (2026-06-18) confirmed the locked decisions
+> hold against `main`.** Locked decisions are **binding** — surface conflicts, don't
+> silently deviate. Per-block starter prompts live in `docs/blocks/`. Cross-cutting
+> choices that needed Randall's direction live in `docs/open-decisions.md`.
 
 ## Context
 
@@ -129,7 +130,7 @@ Each rule gets a unit test.
 | `generateHandoff` / `advanceHandoff` | Conditional UPDATE + stale-state pattern on multi-table flips | `app/(app)/ops/actions.ts` |
 | `getRfqForHandoff` | Pre-tx tenant-scoped read that returns rfq, trades, and firms map | `lib/queries/ops.ts` |
 
-Also built: schema (`db/schema.ts`, 14 tables) and migrations 0001–0003; `recordEvent()`;
+Also built: schema (`db/schema.ts`, 15 tables) and migrations through 0005; `recordEvent()`;
 award math and tests; masking projection and tests; Block B threshold rules and projection
 helper (`lib/policy.ts`, 30 tests); concentration helper (`lib/queries/concentration.ts`,
 4 tests); approvals queue and detail reads (`lib/queries/approvals.ts`, 3 tests); approve/
@@ -150,25 +151,29 @@ compliance queries (`lib/queries/compliance.ts`, 5 generated-SQL tests), D-3 pub
     in email and dealer token view, and a repo ESLint config for non-interactive lint validation;
     Block E admin workspace (`/admin`) for admin users with tenant-aware reads,
     audited bank panel create/rename/default/member/delete actions (`bank_panel_updated`),
-    and read-only TODO-marked templates/rules/thresholds/users sections.
+    and read-only TODO-marked templates/rules/thresholds/users sections;
+    Block F attachments via private Supabase Storage (`lib/storage.ts`, stop-ship
+    access-control tests, `attachment_added` audit event, signed-URL reads on the dealer
+    surface); Block G role-specific dashboards (`/dashboard` landing per role, composing
+    the existing tenant-scoped query helpers, read-only).
 
-Test count after Block E: **100 tests** across `npm test`.
+Test count after Block G (final): **117 tests** across `npm test`.
 
-## Remaining blocks (each independently shippable)
+## Blocks (all shipped)
 
-| Block | Scope | POC view | Route(s) |
+| Block | Scope | Route(s) | Shipped |
 | --- | --- | --- | --- |
-| ~~**A**~~ | ~~Create-RFQ wizard + dealer invitations~~ | shipped PR #1 | `/rfqs/new` |
-| ~~**B**~~ | ~~Approval workspace + threshold enforcement~~ | shipped PR #3 | `/approvals` |
-| ~~**C**~~ | ~~Ops / STP workspace~~ | shipped (branch `feat/block-c-ops-stp`) | `/ops` |
-| ~~**D**~~ | ~~Compliance / best-execution workspace~~ | shipped (current branch) | `/compliance` |
-| ~~**E**~~ | ~~Admin workspace + bank panel management~~ | shipped (branch `feat/manage-bank-panels`) | `/admin` |
-| **F** | Attachments via Supabase Storage | new infra surface | create-RFQ + RFQ detail |
-| **G** | Role-specific dashboards (polish, ship last) | `_legacy/views/Dashboard.jsx` | per-role landing |
+| ~~**A**~~ | ~~Create-RFQ wizard + dealer invitations~~ | `/rfqs/new` | PR #1 |
+| ~~**B**~~ | ~~Approval workspace + threshold enforcement~~ | `/approvals` | PR #3 |
+| ~~**C**~~ | ~~Ops / STP workspace~~ | `/ops` | PR #5 |
+| ~~**D**~~ | ~~Compliance / best-execution workspace~~ | `/compliance` | PR #6 |
+| ~~**E**~~ | ~~Admin workspace + bank panel management~~ | `/admin` | PR #7 |
+| ~~**F**~~ | ~~Attachments via Supabase Storage~~ | create-RFQ + RFQ detail | PR #8 |
+| ~~**G**~~ | ~~Role-specific dashboards~~ | `/dashboard` per-role landing | PR #9 |
 
-Priority next: F → G. Commit incrementally (one logical commit per
-piece). Every mutation through `recordEvent()`. Every read tenant- or token-scoped.
-Run `npm test` and `npx tsc --noEmit` before each commit.
+All blocks shipped. The build invariants that held throughout: every mutation through
+`recordEvent()`, every read tenant- or token-scoped, money in integer cents, and
+`npm test` / `npx tsc --noEmit` / `npm run lint` green at each merge.
 
 ## Per-block validation gate (Claude checks every block)
 

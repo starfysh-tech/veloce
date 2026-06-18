@@ -222,6 +222,16 @@ and policy thresholds are code-backed (`lib/templates.ts`, `lib/policy.ts`), and
 creation needs Supabase Auth handling, so those are deferred rather than shipped as
 no-op controls.
 
+**Ratified by Randall 2026-06-18 (post-merge consistency review).** Editable bank panels
+deviate from Decision 22's read-only-admin default, but D-8 explicitly opened this option;
+the editable-panels path was chosen and is now **approved** for the pilot. This supersedes
+Decision 22 **for the bank-panels section only** — every other admin section stays
+read-only. A decision-consistency audit of merged `main` confirmed the implementation
+honors Decision 7: all five panel operations (create / rename / set-default / update-members
+/ delete) route through `recordEvent()` emitting `bank_panel_updated` (`app/(app)/admin/actions.ts`
+@75/111/138/170/209), are tenant-scoped to `caller.firmId`, and reuse the conditional-UPDATE
+concurrency guard — no second write path was introduced.
+
 ### D-9. Block F — Storage bucket layout & MIME/size limits
 Decision 12 + 24: real uploads, tenant-scoped paths, MIME/size validation only (no
 scanning). Need: bucket name, path convention (e.g. `{firmId}/{rfqId}/{filename}`),
