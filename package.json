@@ -13,7 +13,7 @@
     "db:seed": "tsx --env-file-if-exists=.env db/seed.ts",
     "test": "vitest run",
     "test:watch": "vitest",
-    "site:encrypt": "rm -rf _site-preview && cp -r site _site-preview && node scripts/inline-site-images.mjs _site-preview && npx staticrypt@3 _site-preview/*.html --directory _site-preview --config false",
+    "site:encrypt": "rm -rf _site-preview && cp -r site _site-preview && node scripts/inline-site-images.mjs _site-preview && npx staticrypt@3 _site-preview/*.html --directory _site-preview --short --config false",
     "site:preview": "npx serve site"
   },
   "dependencies": {

@@ -47,13 +47,22 @@ jobs:
         # --directory _site writes encrypted files back into _site (same as source
         # because we already copied to _site and the output dir matches input dir).
         # --recursive handles any html files nested in subdirectories.
+        # --short: never prompt about password length — CI has no stdin, and a
+        # prompt would otherwise be auto-declined and SKIP encryption (deploying
+        # plaintext). Use a long passphrase for real security; --short only
+        # suppresses the interactive guard.
         env:
           STATICRYPT_PASSWORD: ${{ secrets.STATICRYPT_PASSWORD }}
         run: |
           npx staticrypt@3 _site/*.html \
             --directory _site \
             --recursive \
+            --short \
             --config false
+          # Fail loudly if encryption did not actually happen, so we never
+          # deploy plaintext (belt-and-braces against a future silent skip).
+          grep -q "staticryptEncryptedMsgUniqueVariableName\|staticrypt" _site/index.html \
+            || { echo "::error::index.html is not encrypted — aborting deploy"; exit 1; }
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
