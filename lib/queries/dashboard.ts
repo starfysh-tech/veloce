@@ -8,6 +8,9 @@ import { getOpsTrades, getOpsHandoffs, type OpsHandoffRow, type OpsTradeRow } fr
 import { getComplianceOverview, type ComplianceOverview } from '@/lib/queries/compliance';
 import { getDealerConcentration } from '@/lib/queries/concentration';
 import { getAdminOverview, type AdminOverview } from '@/lib/queries/admin';
+import { concentrationBreachCount, highestConcentrationBps, responseRatePct } from '@/lib/queries/dashboard-shape';
+
+export { concentrationBreachCount, highestConcentrationBps, responseRatePct } from '@/lib/queries/dashboard-shape';
 
 export type UserRole = Extract<Caller, { kind: 'user' }>['role'];
 
@@ -19,6 +22,7 @@ export type TraderDashboard = {
     draftRfqs: number;
     responseRatePct: number | null;
   };
+  liveRfq: RfqListRow | null;
   recentRfqs: RfqListRow[];
   tasks: RfqListRow[];
 };
@@ -75,25 +79,9 @@ export type DashboardData =
   | ComplianceDashboard
   | AdminDashboard;
 
-export function responseRatePct(rfqs: Pick<RfqListRow, 'status' | 'quoteCount' | 'invitedCount'>[]): number | null {
-  const live = rfqs.filter((r) => r.status === 'live');
-  const invited = live.reduce((sum, r) => sum + r.invitedCount, 0);
-  if (invited === 0) return null;
-  const quotes = live.reduce((sum, r) => sum + r.quoteCount, 0);
-  return Math.round((quotes / invited) * 100);
-}
-
-export function highestConcentrationBps(concentration: Record<string, { shareBps: number }>): number | null {
-  const shares = Object.values(concentration).map((c) => c.shareBps);
-  return shares.length ? Math.max(...shares) : null;
-}
-
-export function concentrationBreachCount(rows: Array<{ shareBps: number }>, thresholdBps = 3500): number {
-  return rows.filter((c) => c.shareBps > thresholdBps).length;
-}
-
 async function getTraderDashboard(firmId: string): Promise<TraderDashboard> {
   const rfqs = await listRfqs(firmId);
+  const liveRfq = rfqs.find((r) => r.status === 'live') ?? null;
   return {
     role: 'trader',
     kpis: {
@@ -102,6 +90,7 @@ async function getTraderDashboard(firmId: string): Promise<TraderDashboard> {
       draftRfqs: rfqs.filter((r) => r.status === 'draft').length,
       responseRatePct: responseRatePct(rfqs),
     },
+    liveRfq,
     recentRfqs: rfqs.slice(0, 5),
     tasks: rfqs.filter((r) => ['live', 'awaiting_approval', 'draft'].includes(r.status)).slice(0, 6),
   };

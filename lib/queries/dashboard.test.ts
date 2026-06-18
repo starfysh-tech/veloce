@@ -2,8 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 describe('dashboard shaping helpers', () => {
   async function loadHelpers() {
-    process.env.DATABASE_URL ||= 'postgres://test:test@localhost:5432/test';
-    return import('./dashboard');
+    return import('./dashboard-shape');
   }
 
   it('computes live response rate from live RFQs only', async () => {

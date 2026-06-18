@@ -30,7 +30,7 @@ function DashboardHeader({ label, role }: { label: string; role: string }) {
 }
 
 function TraderPanel({ data }: { data: Extract<DashboardData, { role: 'trader' }> }) {
-  const live = data.recentRfqs.find((r) => r.status === 'live');
+  const live = data.liveRfq;
   return (
     <>
       <div className="grid g4">
