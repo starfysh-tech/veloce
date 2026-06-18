@@ -236,6 +236,65 @@ sell at all.
   legal question with consequences for the entire product shape. **Get that
   ruling early; it may reshape this roadmap.**
 
+## External references
+
+Primary sources, verified current as of 2026-06-18. These are starting points
+for the specialist conversations, **not** substitutes for them — especially
+counsel on Track 1. Cited because they are the actual governing authorities a
+lawyer or auditor will work from, not secondary summaries.
+
+### Track 1 — regulatory (give these to securities counsel)
+
+- **SEC Regulation SE — Registration and Regulation of Security-Based Swap
+  Execution Facilities** (adopted Nov 2, 2023). This is the framework R-1 turns
+  on: it created the SBSEF regime under Exchange Act Section 3D, explicitly
+  modeled on the CFTC's SEF rules, with 14 Core Principles. The threshold
+  question for Veloce is whether a price-forming multi-dealer auction for
+  security-based swaps is "a facility for the trading or processing of SBS" that
+  must register as an SBSEF or national securities exchange.
+  - Adopting release / press: https://www.sec.gov/news/press-release/2023-230
+  - Final rule (full text, SEA Release 34-98845): https://www.sec.gov/files/rules/final/2023/34-98845.pdf
+- **The SBS vs. swap split matters for which regulator.** The SEC governs
+  security-based swaps (single-name / narrow-index equity); the CFTC governs
+  swaps (broad-based index). Veloce's pilot instruments span both
+  (single-name-ish hedges and broad-index SPX/SX5E structures), so **product mix
+  may determine which regulator's venue rules apply, or both.** Counsel needs the
+  exact instrument list to assess this. CFTC SEF background:
+  https://www.cftc.gov/IndustryOversight/TradingOrganizations/SEF2
+- **Regulation SBSR — Reporting and Dissemination of SBS Information.** Bears on
+  R-4: if Veloce is a platform on which SBS are executed, Rule 901(a)(1) reporting
+  duties to a registered SDR may attach.
+  https://www.sec.gov/rules-regulations/2016/07/regulation-sbsr-reporting-dissemination-security-based-swap-information
+- **SBS recordkeeping/reporting rules (Exchange Act Rules 17a-3/17a-4 for
+  broker-dealers, 18a-5/18a-6 for SBSDs).** The bar R-4 must clear if real
+  recordkeeping obligations attach to the `events` log. SEC adopting release:
+  https://www.sec.gov/rules-regulations/2019/09/recordkeeping-reporting-requirements-security-based-swap-dealers-major-security-based-swap
+- **ISDA** — for R-3 (dealer/client legal onboarding): Master Agreement, CSA, and
+  the documentation architecture real counterparty relationships require.
+  https://www.isda.org/
+
+### Track 2 — security & trust
+
+- **AICPA SOC 2 / Trust Services Criteria** (S-1). The current framework is the
+  **2017 Trust Services Criteria with Revised Points of Focus (2022)**; Security
+  (CC1–CC9) is the only mandatory criterion, the other four
+  (Availability, Processing Integrity, Confidentiality, Privacy) are scoped in by
+  choice. For an insurer-facing trade platform, expect Security + Availability +
+  Confidentiality at minimum, likely Processing Integrity given it handles trade
+  economics. Note: the AICPA **revised the applying-guidance in March 2026** — make
+  sure any auditor works from the latest.
+  https://www.aicpa-cima.com/resources/download/get-description-criteria-for-your-organizations-soc-2-r-report
+- **Type II requires an observation window** (commonly 3–12 months) on top of
+  remediation — this is the calendar constraint behind "start the clock now."
+
+### Internal cross-references
+
+- Locked MVP decisions: `docs/HANDOFF.md`
+- Per-block resolutions (D-1…D-9) and accepted gaps: `docs/open-decisions.md`
+- The deferrals this roadmap pays down are grounded in code: `lib/stp.ts`
+  (no-transmit, Decision 12), `lib/queries/concentration.ts` (`TODO(multi-ccy)`,
+  Decision 20), `app/(app)/approvals/actions.ts` (`committeeNote`, Decision 21).
+
 ## Next step
 
 Each track deserves the same design-tree walk the MVP got — decisions made
@@ -243,3 +302,8 @@ explicit, trade-offs surfaced, assumptions validated — before its items become
 binding work. Track 3 can be taken furthest immediately, since it is mostly
 downstream of decisions already in `open-decisions.md`. Track 1 should be opened
 with counsel, not with a design-tree walk.
+
+One specific thing to hand counsel first: **the exact pilot instrument list**,
+because the SEC/CFTC jurisdictional split (security-based swaps vs. swaps) turns
+on whether each structure references a single name / narrow index or a broad
+index — and that split determines which venue rules, if any, apply.
