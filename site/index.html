@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Overview — Veloce</title>
+  <link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><b>VELOCE</b><span>FINANCIAL TECHNOLOGIES</span></div>
+    <nav class="topnav">
+      <a href="index.html" class="active">Overview</a>
+      <a href="how-it-works.html">How it works</a>
+      <a href="user-guide.html">User guide</a>
+      <a href="demo.html">Try the demo</a>
+      <a href="roadmap.html">Roadmap</a>
+      <a href="formation.html">Company</a>
+      <a href="glossary.html">Glossary</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="eyebrow">OTC equity-derivatives execution</div>
+      <h1>Structured multi-dealer auctions for OTC equity derivatives.</h1>
+      <p class="lede">Veloce turns the phone-and-email RFQ process insurers use to hedge
+        equity risk into a timed, blind, multi-dealer auction — with a complete
+        best-execution trail from request to affirmation.</p>
+      <div class="warnbox small">
+        <strong>Pilot, mock data, no live trading.</strong> This is a functional
+        parallel-run pilot. Workflows are real; execution stays on existing rails. No
+        live orders are placed and all data shown is illustrative.
+      </div>
+    </section>
+
+    <section>
+      <h2>The problem</h2>
+      <p>A treasury desk hedging a large equity book calls or emails a handful of dealer
+        banks, collects quotes in inboxes and chat windows, and picks one. The process is
+        slow, the competitive tension is hard to prove, partial-size liquidity is hard to
+        aggregate, and the best-execution evidence is scattered across messages.</p>
+      <h2>What Veloce does</h2>
+      <p>Veloce runs the request as a <strong>synchronized, blind auction</strong>: every
+        invited dealer quotes the same request at the same time without seeing each other.
+        When the window closes, the desk sees a ranked board, an automatic
+        <strong>single-bank vs. blended-allocation</strong> comparison, threshold and
+        concentration checks, and a one-click route into approval, trade capture, STP, and
+        compliance — each step written to an append-only audit log.</p>
+    </section>
+
+    <section>
+      <h2>End to end, in one platform</h2>
+      <div class="grid">
+        <div class="card"><strong>1 · Request</strong><br><span class="muted">A trader builds an RFQ and invites a dealer panel.</span></div>
+        <div class="card"><strong>2 · Auction</strong><br><span class="muted">Dealers quote blind; the board ranks responses.</span></div>
+        <div class="card"><strong>3 · Award</strong><br><span class="muted">Single vs. blended construction, with best-ex math.</span></div>
+        <div class="card"><strong>4 · Approve</strong><br><span class="muted">Threshold &amp; concentration checks gate the award.</span></div>
+        <div class="card"><strong>5 · Capture &amp; STP</strong><br><span class="muted">Trades booked, FpML-style payload generated.</span></div>
+        <div class="card"><strong>6 · Affirm &amp; evidence</strong><br><span class="muted">Lifecycle advanced; compliance evidence exportable.</span></div>
+      </div>
+      <p class="small muted">See <a href="how-it-works.html">How it works</a> for the full
+        narrative with screenshots, or the <a href="user-guide.html">User guide</a> for
+        role-by-role walkthroughs.</p>
+    </section>
+
+    <section>
+      <figure>
+        <img src="images/trader-04-board.png" alt="Veloce quote board with blended-allocation comparison">
+        <figcaption>The quote board: ranked dealer responses with an automatic blended-vs-single
+          comparison — here a blended allocation saves 13.4 bps ($335,000) on a $250M hedge.</figcaption>
+      </figure>
+    </section>
+
+    <section>
+      <h2>Built for every seat on the desk</h2>
+      <div class="roles">
+        <a href="user-guide.html#trader"><div class="card"><strong>Trader</strong><br><span class="muted">Launch RFQs, run the auction, construct the award.</span></div></a>
+        <a href="user-guide.html#approver"><div class="card"><strong>Approver</strong><br><span class="muted">Review awards against policy thresholds and concentration.</span></div></a>
+        <a href="user-guide.html#ops"><div class="card"><strong>Operations</strong><br><span class="muted">Capture trades, generate STP, advance affirmation.</span></div></a>
+        <a href="user-guide.html#compliance"><div class="card"><strong>Compliance</strong><br><span class="muted">Best-execution evidence, exceptions, concentration.</span></div></a>
+        <a href="user-guide.html#admin"><div class="card"><strong>Administration</strong><br><span class="muted">Dealer panels, entitlements, policy reference, audit.</span></div></a>
+      </div>
+    </section>
+
+    <section class="note">
+      <strong>Want to click through it?</strong> The <a href="demo.html">live demo</a> has a
+      seeded account for every role. Sign in, follow the guided tour, and watch a request
+      move from launch to affirmation.
+    </section>
+  </main>
+
+  <footer>
+    Veloce Financial Technologies · Confidential — shared under NDA ·
+    Parallel-run pilot, mock data, no live trading.
+  </footer>
+</body>
+</html>

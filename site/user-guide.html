@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>User guide — Veloce</title>
+  <link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><b>VELOCE</b><span>FINANCIAL TECHNOLOGIES</span></div>
+    <nav class="topnav">
+      <a href="index.html">Overview</a>
+      <a href="how-it-works.html">How it works</a>
+      <a href="user-guide.html" class="active">User guide</a>
+      <a href="demo.html">Try the demo</a>
+      <a href="roadmap.html">Roadmap</a>
+      <a href="formation.html">Company</a>
+      <a href="glossary.html">Glossary</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="eyebrow">Role-by-role walkthroughs</div>
+      <h1>User guide.</h1>
+      <p class="lede">Each seat on the desk has its own workspace. Below is what every role
+        sees and does, screen by screen, against the seeded demo. To follow along, sign in
+        with the matching account from <a href="demo.html">Try the demo</a>.</p>
+      <div class="card small">
+        <strong>Jump to a role:</strong>
+        <a href="#trader">Trader</a> ·
+        <a href="#approver">Approver</a> ·
+        <a href="#ops">Operations</a> ·
+        <a href="#compliance">Compliance</a> ·
+        <a href="#admin">Administration</a> ·
+        <a href="#dealer">Dealer</a>
+      </div>
+    </section>
+
+    <!-- ───────────── TRADER ───────────── -->
+    <section id="trader">
+      <div class="eyebrow">Trader · dana@meridian.example</div>
+      <h2>Trader — run the auction</h2>
+      <p>The trader launches requests, watches dealers respond, and constructs the award.</p>
+
+      <div class="step">
+        <div class="n">1</div>
+        <div>
+          <h3>Start at the dashboard</h3>
+          <p>The trader dashboard surfaces live auctions, draft RFQs, the live response rate,
+            and a task list — all scoped to the firm.</p>
+          <figure><img src="images/trader-01-dashboard.png" alt="Trader dashboard"></figure>
+        </div>
+      </div>
+      <div class="step">
+        <div class="n">2</div>
+        <div>
+          <h3>Scan the blotter</h3>
+          <p>Every request the firm has run, across all statuses — draft, live, under review,
+            awarded, in STP, affirmed — with size and product at a glance.</p>
+          <figure><img src="images/trader-02-blotter.png" alt="RFQ blotter"></figure>
+        </div>
+      </div>
+      <div class="step">
+        <div class="n">3</div>
+        <div>
+          <h3>Build a request</h3>
+          <p>A guided wizard captures the product and terms, economics and size, the dealer
+            panel, and the auction window, then launches the RFQ to the invited dealers.</p>
+          <figure><img src="images/trader-03-create.png" alt="Create-RFQ wizard"></figure>
+        </div>
+      </div>
+      <div class="step">
+        <div class="n">4</div>
+        <div>
+          <h3>Work the quote board</h3>
+          <p>Once the window closes, the board ranks responses and builds the award. Toggle
+            between best single bank and best blended allocation; Veloce shows the basis-point
+            and dollar difference and routes the chosen construction to approval.</p>
+          <figure><img src="images/trader-04-board.png" alt="Quote board and award construction"></figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────────── APPROVER ───────────── -->
+    <section id="approver">
+      <div class="eyebrow">Approver · marcus@meridian.example</div>
+      <h2>Approver — gate the award</h2>
+      <p>The approver reviews recommended awards against policy before they're finalized.</p>
+
+      <div class="step">
+        <div class="n">1</div>
+        <div>
+          <h3>Dashboard</h3>
+          <p>Pending approvals, policy flags, and concentration indicators front and centre.</p>
+          <figure><img src="images/approver-01-dashboard.png" alt="Approver dashboard"></figure>
+        </div>
+      </div>
+      <div class="step">
+        <div class="n">2</div>
+        <div>
+          <h3>The approval queue</h3>
+          <p>Every recommended award awaiting committee action, with the proposed allocation and
+            any open exceptions.</p>
+          <figure><img src="images/approver-02-queue.png" alt="Approval queue"></figure>
+        </div>
+      </div>
+      <div class="step">
+        <div class="n">3</div>
+        <div>
+          <h3>Review &amp; decide</h3>
+          <p>The detail view shows the archived quote ladder as best-execution evidence,
+            concentration context, and policy flags. Above $250M, the platform displays a
+            two-person-committee requirement and requires an acknowledgement note before a
+            single approver can finalize — a deliberate, visible pilot gap. The approver can
+            approve, reject with a reason, or request clarification.</p>
+          <figure>
+            <img src="images/approver-03-detail.png" alt="Approval detail: award summary, allocations, archived ladder, policy flags, and acknowledgement">
+            <figcaption>The approval detail: blended award summary, the archived quote ladder as
+              best-execution evidence, concentration and best-ex deviation flags, the auto-opened
+              compliance exception (EX-2026-0002), and per-flag acknowledgement before approve.</figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────────── OPS ───────────── -->
+    <section id="ops">
+      <div class="eyebrow">Operations · tomas@meridian.example</div>
+      <h2>Operations — capture &amp; affirm</h2>
+      <p>Middle office turns approved awards into booked trades and walks them through STP.</p>
+
+      <div class="step">
+        <div class="n">1</div>
+        <div>
+          <h3>Dashboard</h3>
+          <p>Trade capture, STP handoff, and exception summaries for the firm's awarded flow.</p>
+          <figure><img src="images/ops-01-dashboard.png" alt="Operations dashboard"></figure>
+        </div>
+      </div>
+      <div class="step">
+        <div class="n">2</div>
+        <div>
+          <h3>Approved trade economics</h3>
+          <p>Every awarded allocation becomes a discrete trade with its own capture record —
+            dealer, allocation, level, settlement, UTI, status. Awarded RFQs that haven't been
+            handed off yet are queued for capture.</p>
+          <figure><img src="images/ops-02-trades.png" alt="Approved trade economics and STP handoffs"></figure>
+        </div>
+      </div>
+      <div class="step">
+        <div class="n">3</div>
+        <div>
+          <h3>Generate &amp; preview the STP payload</h3>
+          <p>Generating a handoff produces the FpML-style capture payload and moves the trades
+            into the affirmation lifecycle (sent → matched → affirmed). The payload is
+            previewable as pretty-printed JSON and, per the pilot model, never transmitted.</p>
+          <figure><img src="images/ops-03-payload.png" alt="STP capture payload preview"></figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────────── COMPLIANCE ───────────── -->
+    <section id="compliance">
+      <div class="eyebrow">Compliance · ingrid@meridian.example</div>
+      <h2>Compliance — prove best execution</h2>
+      <p>Compliance gets read-only evidence across every request the firm has run.</p>
+
+      <div class="step">
+        <div class="n">1</div>
+        <div>
+          <h3>Dashboard</h3>
+          <p>Best-execution status, exceptions, concentration, and recent event activity.</p>
+          <figure><img src="images/compliance-01-dashboard.png" alt="Compliance dashboard"></figure>
+        </div>
+      </div>
+      <div class="step">
+        <div class="n">2</div>
+        <div>
+          <h3>Best-execution evidence</h3>
+          <p>Per RFQ: the latest stored quote ladder, the award decision, exceptions, and the
+            event log — each exportable as a read-only JSON evidence pack that appends no audit
+            events of its own.</p>
+          <figure><img src="images/compliance-02-bestex.png" alt="Best-execution evidence"></figure>
+        </div>
+      </div>
+      <div class="step">
+        <div class="n">3</div>
+        <div>
+          <h3>Dealer concentration</h3>
+          <p>Trailing-90-day awarded share per dealer, labelled as an indicative,
+            single-currency (USD) basis — with non-USD trades intentionally excluded until FX
+            conversion exists.</p>
+          <figure><img src="images/compliance-03-concentration.png" alt="Dealer concentration view"></figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────────── ADMIN ───────────── -->
+    <section id="admin">
+      <div class="eyebrow">Administration · alex@meridian.example</div>
+      <h2>Administration — configure &amp; audit</h2>
+      <p>The admin workspace covers configuration, entitlements, policy reference, and audit.</p>
+
+      <div class="step">
+        <div class="n">1</div>
+        <div>
+          <h3>Dashboard</h3>
+          <p>User, panel, dealer, and audit summaries for the tenant.</p>
+          <figure><img src="images/admin-01-dashboard.png" alt="Administration dashboard"></figure>
+        </div>
+      </div>
+      <div class="step">
+        <div class="n">2</div>
+        <div>
+          <h3>Manage bank panels</h3>
+          <p>Bank panels are the one editable admin surface in the pilot: create panels, rename
+            them, set the default, and add or remove dealer banks. Changes flow straight into
+            the Create-RFQ panel picker and are written to the audit log. Other sections —
+            templates, auction rules, approval thresholds, entitlements — are read-only, each
+            marked with what it needs to become editable.</p>
+          <figure><img src="images/admin-02-panels.png" alt="Bank panel management"></figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- ───────────── DEALER ───────────── -->
+    <section id="dealer">
+      <div class="eyebrow">Dealer · no account required</div>
+      <h2>Dealer — respond to a request</h2>
+      <p>Dealers don't have logins. When a trader launches an RFQ, each invited dealer receives
+        a one-time magic link scoped to that single request. Opening it shows only that RFQ's
+        terms and a quote form — no other firm's data, no other request. Quoting is blind:
+        a dealer never sees competing responses. Submissions are accepted only until the
+        auction deadline, which is enforced on the server; after that the dealer can still open
+        the link to view what they submitted, but can no longer change it.</p>
+      <div class="note small">A dealer screenshot isn't included here because the dealer surface
+        is gated by a per-request token rather than an account. Walk it live by launching an RFQ
+        in the demo and following the generated dealer link.</div>
+    </section>
+  </main>
+
+  <footer>
+    Veloce Financial Technologies · Confidential — shared under NDA ·
+    Parallel-run pilot, mock data, no live trading.
+  </footer>
+</body>
+</html>
