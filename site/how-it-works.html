@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>How it works — Veloce</title>
+  <link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><b>VELOCE</b><span>FINANCIAL TECHNOLOGIES</span></div>
+    <nav class="topnav">
+      <a href="index.html">Overview</a>
+      <a href="how-it-works.html" class="active">How it works</a>
+      <a href="user-guide.html">User guide</a>
+      <a href="demo.html">Try the demo</a>
+      <a href="roadmap.html">Roadmap</a>
+      <a href="formation.html">Company</a>
+      <a href="glossary.html">Glossary</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="eyebrow">The lifecycle</div>
+      <h1>From request to affirmation.</h1>
+      <p class="lede">One hedging request, followed all the way through the platform. Every
+        state change is written to an append-only audit log, and every screen below is a
+        real view from the demo.</p>
+    </section>
+
+    <section>
+      <div class="step">
+        <div class="n">1</div>
+        <div>
+          <h3>Build the request</h3>
+          <p>A trader specifies the structure — underlying, strike, expiry, size, settlement —
+            and selects the dealer panel to invite. A request can be launched blind, so dealers
+            quote without seeing one another.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="n">2</div>
+        <div>
+          <h3>Dealers quote, the board ranks</h3>
+          <p>Invited dealers respond during a timed window. As quotes arrive the board ranks
+            them by level and shows partial-size limits — liquidity an email thread can't
+            aggregate. The countdown and deadline are enforced server-side.</p>
+          <figure>
+            <img src="images/trader-04-board.png" alt="Quote board with four dealer responses and award construction">
+            <figcaption>Four dealers responded on this $250M S&amp;P 500 put hedge. The board ranks
+              them and exposes each dealer's partial-size appetite.</figcaption>
+          </figure>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="n">3</div>
+        <div>
+          <h3>Construct the award</h3>
+          <p>Veloce computes the best single-bank fill and the best blended allocation that
+            stacks partials until the full size is covered, and quantifies the difference in
+            basis points and dollars. Here the blended construction saves <strong>13.4 bps
+            ($335,000)</strong> versus the best single bank.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="n">4</div>
+        <div>
+          <h3>Approve against policy</h3>
+          <p>Recommending an award routes it to an approver. Policy checks fire in-flow:
+            notional thresholds, a &gt;35% dealer-concentration flag, and a best-execution
+            deviation note if the award isn't the best quoted price. Above $250M the platform
+            shows a two-person-committee requirement and records an acknowledgement note.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="n">5</div>
+        <div>
+          <h3>Capture trades &amp; generate STP</h3>
+          <p>On approval each allocation becomes a discrete trade. Operations generate a capture
+            payload — representative FpML-style JSON — that is persisted and previewable but, in
+            the pilot, deliberately <strong>never transmitted</strong>.</p>
+          <figure>
+            <img src="images/ops-03-payload.png" alt="STP capture payload preview">
+            <figcaption>The capture payload preview. In production this flows to MarkitWire / DTCC
+              or the client's OMS; the pilot persists it without transmitting.</figcaption>
+          </figure>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="n">6</div>
+        <div>
+          <h3>Affirm, then prove best execution</h3>
+          <p>Operations advance the handoff through the affirmation lifecycle. Compliance gets a
+            per-RFQ best-execution evidence pack — the quote ladder, the decision, exceptions,
+            and the event log — plus a dealer-concentration view, all exportable.</p>
+          <figure>
+            <img src="images/compliance-02-bestex.png" alt="Best-execution evidence workspace">
+            <figcaption>The best-execution workspace: every awarded request with its ladder,
+              decision, exceptions, and a read-only JSON export.</figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <section class="note">
+      Ready to walk it yourself? Each role's step-by-step is in the
+      <a href="user-guide.html">User guide</a>, and the <a href="demo.html">demo</a> has a
+      login for every seat.
+    </section>
+  </main>
+
+  <footer>
+    Veloce Financial Technologies · Confidential — shared under NDA ·
+    Parallel-run pilot, mock data, no live trading.
+  </footer>
+</body>
+</html>
