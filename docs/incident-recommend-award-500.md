@@ -80,6 +80,6 @@ is the documented and most probable cause.
 ## When it's green
 
 Ping back — the approval-detail screenshot (`approver-03-detail`, the $250M committee
-note + threshold flags) is the only remaining shot for the partner-site user guide,
+note and threshold flags) is the only remaining shot for the partner-site user guide,
 and it needs a recommended award sitting in the approval queue. Everything else is
 captured. WIP on branch `docs/partner-site-guide`.

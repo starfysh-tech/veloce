@@ -51,15 +51,22 @@ const htmlFiles = (await readdir(buildDir)).filter((f) => f.endsWith('.html'));
 const cache = new Map(); // ref -> data URI, so a shared image is converted once
 let inlined = 0;
 
+// Match src=images/… tolerant of single or double quotes and optional spaces
+// around '=' (e.g. src='images/x', src = "images/x"), so no reference is missed
+// and left dangling after images/ is deleted.
+const IMG_SRC = /src\s*=\s*(["'])(images\/[^"']+)\1/g;
+
 for (const file of htmlFiles) {
   const path = join(buildDir, file);
   let html = await readFile(path, 'utf8');
-  const refs = [...new Set([...html.matchAll(/src="(images\/[^"]+)"/g)].map((m) => m[1]))];
+  const refs = [...new Set([...html.matchAll(IMG_SRC)].map((m) => m[2]))];
   for (const ref of refs) {
     if (!cache.has(ref)) cache.set(ref, await dataUri(join(buildDir, ref)));
-    html = html.replaceAll(`src="${ref}"`, `src="${cache.get(ref)}"`);
-    inlined++;
   }
+  html = html.replace(IMG_SRC, (_match, _quote, ref) => {
+    inlined++;
+    return `src="${cache.get(ref)}"`;
+  });
   await writeFile(path, html);
 }
 
