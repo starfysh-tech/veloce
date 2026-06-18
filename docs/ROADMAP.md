@@ -22,11 +22,14 @@ derivatives venue serving insurers, the gating constraint is almost never the
 code — it is the trust and compliance posture that lets a regulated buy-side
 firm and a dealer bank legally route real flow through the platform.
 
-Confidence is called out per track. Tracks 2–4 are standard hard-mode SaaS
+Confidence is called out per track. Tracks 2 and 4 are standard hard-mode SaaS
 commercialization with derivatives-specific flavor; they can be planned with
-reasonable confidence. **Track 1 (regulatory) can only be framed here, not
-answered — it needs securities counsel, and a confident-sounding guess would be
-a liability.**
+reasonable confidence now. **Track 3 is mostly plannable now, with one
+exception: T3-1 (real STP) and T3-2 (governance) are regulatory-contingent —
+their specs change if R-1 classifies Veloce as a venue, so do not finalize them
+ahead of R-1.** **Track 1 (regulatory) can only be framed here, not answered —
+it needs securities counsel, and a confident-sounding guess would be a
+liability.**
 
 ---
 
@@ -37,17 +40,43 @@ downstream is wasted effort if the classification comes back differently than
 assumed. **Most of this is not engineering.** Engage counsel before building
 venue features, not after.
 
-### R-1. Regulatory classification of the auction **(gates everything in Track 3)**
+### R-0. Compile & classify the pilot instrument list **(prerequisite for R-1; do first)**
+R-1 cannot be answered in the abstract — its answer is **data-dependent on which
+instruments Veloce intends to support**, because the SEC/CFTC jurisdictional
+split turns on index breadth (see R-1). Before counsel can rule, produce a single
+table: every structure in scope, its underlying, and whether that underlying is a
+single name, a **narrow-based** security index, or a **broad-based** index. From
+the current seed data the structures are SPX / NDX / RTY / SX5E / UKX
+puts/collars/spreads, an SX5E variance swap, and a **custom 32-name basket
+overlay** (`db/seed-data.ts`). The broad indices likely point CFTC; the custom
+basket is the one most likely to be narrow-based and land under SEC jurisdiction.
+- **"Broad-based security index" has a specific regulatory definition** (component
+  count and concentration tests under the SEC/CFTC joint rules). **Do not rely on
+  this roadmap's characterization of any instrument as broad or narrow — that
+  classification is counsel's to make.** The roadmap's job is to surface the
+  question and hand over the list, not to answer it.
+- Effort: low (it is a list), but it gates the highest-lead-time item, so it is
+  literally the first thing to do.
+
+### R-1. Regulatory classification of the auction **(gates T3-1, T3-2; needs R-0 + counsel)**
 The hardest open question, and the one that can reshape the product. A timed
-multi-dealer auction that **determines execution price** may implicate
-SEF/MTF-style venue regulation, broker/ATS rules, or none of the above —
-depending on jurisdiction, product, and exactly how price formation works. The
-pilot sidesteps this by keeping execution on existing rails (Decision 1, Decision
-12: `lib/stp.ts` generates and persists capture payloads but **never transmits**,
-enforced by an allowlist test). Commercial use, where Veloce *is* the execution
-venue, may not.
-- **Needs: securities counsel ruling before Track 3 venue work begins.** Claude
-  cannot and should not rule on this.
+multi-dealer auction that **determines execution price** may require registration
+as a venue. The specific US framework is **SEC Regulation SE** (adopted Nov 2023),
+which created the **security-based swap execution facility (SBSEF)** regime under
+Exchange Act Section 3D, modeled on the CFTC's SEF rules, with 14 Core Principles.
+The threshold question: is Veloce "a facility for the trading or processing of
+SBS" that must register as an SBSEF (or national securities exchange)?
+- **The jurisdiction depends on the product mix (this is the key finding).** The
+  **SEC** governs security-based swaps (single-name / narrow-index equity); the
+  **CFTC** governs swaps (broad-based index). Veloce's pilot spans both, so
+  **which regulator's venue rules apply — possibly both — depends on R-0's
+  classification.** This is why R-0 comes first.
+- The pilot sidesteps all of this by keeping execution on existing rails
+  (Decision 1; Decision 12: `lib/stp.ts` generates and persists capture payloads
+  but **never transmits**, enforced by an allowlist test). Commercial use, where
+  Veloce *is* the execution venue, may not.
+- **Needs: R-0 complete, then securities counsel ruling before Track 3 venue work
+  begins.** Claude cannot and should not rule on this.
 - **Why it gates Track 3:** if Veloce is classified as a regulated venue, the
   STP-transmission work (T3-1) and the governance model (T3-2) acquire hard
   regulatory requirements, not just product requirements.
@@ -65,12 +94,16 @@ hand-managed pilot counterparties.
 ### R-4. Best-execution & recordkeeping as legal obligations
 The MVP's append-only `events` table (Decision 7) was built for the *governance
 story* — an immutable, atomically-written audit log. Commercially it may need to
-satisfy actual recordkeeping regulation: retention periods, immutability
-guarantees a regulator will accept, regulator-accessible export. **The
-architecture is a strong foundation; "good architecture" and "meets the
-retention rule" are different bars.** Needs counsel to set the bar, then likely a
-modest engineering follow-on (retention policy, WORM-style storage or equivalent
-attestation, export format).
+satisfy actual recordkeeping regulation. If R-1 lands on SBSEF/SBS, the specific
+bars are knowable today: **Regulation SBSR Rule 901** (reporting executed SBS to
+a registered SDR), and the SBS recordkeeping rules — **Exchange Act Rules
+17a-3/17a-4** (broker-dealers) and **18a-5/18a-6** (SBSDs) — which set retention
+periods, required data elements (execution date/time, notional, currency,
+counterparty UIC), and immutability expectations. **The architecture is a strong
+foundation; "good architecture" and "meets the retention rule" are different
+bars.** Counsel sets which rules apply; the engineering follow-on (retention
+policy, WORM-style storage or equivalent attestation, regulator-accessible
+export) is then scoped against the named rule, not invented.
 
 ---
 
@@ -212,22 +245,75 @@ it bites.
 
 ---
 
-## Suggested sequencing
+## What we included to start (the initial cut)
 
-The instinct is to build Track 3 first because it is tractable and visible. **That
-is the trap.** Tracks 1 and 2 have the longest lead times and gate whether you can
-sell at all.
+This roadmap is deliberately a **first cut, not a committed plan.** What is in it
+right now:
 
-1. **This month, in parallel:** engage securities counsel on R-1 (classification)
-   and start the S-1 (SOC 2) clock. Both are calendar-bound; neither is code.
-2. **As counsel reports back:** let R-1 shape Track 3. If Veloce is a regulated
-   venue, T3-1 and T3-2 acquire regulatory requirements and their specs change.
-3. **Track 3 by design-partner pull:** sequence by what the first paying customer
-   actually blocks on — most likely T3-1 (real STP) and T3-2 (governance).
-4. **Track 4 before revenue dependence:** the reliability work that must precede
-   relying on the platform, but not relying on the demo.
+- **Four tracks**, derived by walking every MVP deferral logged in
+  `open-decisions.md` and asking "what makes this commercial?" — plus the
+  regulatory and trust dimensions the pilot was allowed to skip.
+- **Each item cross-referenced to evidence** — a `Decision N`, a `D-n`
+  resolution, or a `file:line` — so nothing here is a vibe; it traces to
+  something real in the codebase or the decision log.
+- **External references verified against primary sources** (SEC, CFTC, AICPA,
+  ISDA) on 2026-06-18, with the one product-shaping finding (the SEC/CFTC split
+  depends on instrument mix) promoted into R-0 and R-1.
+
+What is **deliberately not** in it yet: cost estimates, effort sizing beyond
+rough labels, a committed timeline, and — most importantly — anything downstream
+of the R-1 classification, which can reshape Track 3. Those are filled in
+incrementally as the gating unknowns resolve.
+
+## How to move forward (incremental, gating-first)
+
+The method mirrors how the MVP was built: **resolve the highest-leverage unknown
+first, let its answer shape the next layer, never commit work that a pending
+decision could invalidate.** Concretely:
+
+1. **Start the two calendar-bound, code-free items this month, in parallel.**
+   They have the longest lead times and gate whether you can sell at all:
+   - **R-0 → R-1:** compile the instrument list (R-0, low effort, days), hand it
+     to securities counsel, get the classification (R-1, weeks-to-months).
+   - **S-1:** start the SOC 2 clock (the observation window is months regardless
+     of how fast the controls work lands).
+   The instinct is to build Track 3 first because it is tractable and visible.
+   **That is the trap** — it is the one thing that can be invalidated by R-1.
+
+2. **Let R-1's answer gate Track 3.** Do not finalize T3-1 (real STP) or T3-2
+   (governance) before R-1 returns. If Veloce is a venue, both acquire regulatory
+   requirements and their specs change. Everything else in Track 3 (T3-3 through
+   T3-7) is not regulatory-contingent and can proceed on product pull.
+
+3. **Sequence each track with its own design-tree walk, one at a time, when its
+   gate clears.** Each track becomes binding work only after the MVP-style
+   treatment: decisions made explicit, trade-offs surfaced, assumptions
+   validated, logged in `open-decisions.md` with the same `D-n` discipline. Do
+   not pre-plan a track whose inputs are still pending — that just creates
+   rework when the gate resolves differently than assumed.
+
+4. **Track 3 by design-partner pull.** Within the non-gated items, sequence by
+   what the first paying customer actually blocks on, not by what is interesting
+   to build.
+
+5. **Track 4 before revenue dependence, not before the demo.** The reliability
+   work (observability, DR, load validation, the known concurrency races in
+   O-3) must precede *relying* on the platform commercially, but it does not gate
+   a pilot or a demo.
+
+6. **Re-verify the references when you act on them.** Regulatory and SOC 2
+   guidance moves (the AICPA already revised its applying-guidance in March
+   2026). Treat the External References section as current-as-of-draft, not
+   evergreen — re-check before a track that depends on it goes binding.
+
+**The throughline:** this document gets *more* certain over time, not less, as
+each gating unknown resolves and feeds the next track's design-tree walk. It is
+structured to be revised — every item has a stable ID (R-n, S-n, T3-n, O-n) so
+updates and resolutions can be tracked against it the way `D-n` decisions were
+tracked against the MVP.
 
 ## Confidence & caveats
+
 
 - **Tracks 2–4:** reasonable confidence. Standard commercialization with
   derivatives flavor; plannable now.
