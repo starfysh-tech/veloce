@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { resolveUser } from '@/lib/auth/caller';
 import { getDashboard, type DashboardData } from '@/lib/queries/dashboard';
 import { fmtDateTime, fmtMoneyFull, fmtPrice, Icon, notionalLabel, Pill } from '@/components/ui';
+import { CONCENTRATION_FLAG_THRESHOLD_BPS } from '@/lib/policy';
 
 function Kpi({ label, value, note, tone }: { label: string; value: string | number; note: string; tone?: string }) {
   return (
@@ -118,7 +119,7 @@ function ApproverPanel({ data }: { data: Extract<DashboardData, { role: 'approve
               <tr key={r.rfqId}>
                 <td><span className="mono t-strong">{r.rfqRef}</span><div className="t-faint">{r.title}</div></td>
                 <td className="num">{fmtMoneyFull(r.notionalMinor, r.ccy)}</td>
-                <td className="mono">{r.award.kind === 'blended' ? 'Blended' : 'Single'} @ {r.award.blendedPrice}</td>
+                <td className="mono">{r.award.kind === 'blended' ? 'Blended' : 'Single'} @ {fmtPrice(r.award.blendedPrice)}</td>
                 <td>{r.award.flags.length || r.exceptions.length ? <span className="badge badge-warn">{r.award.flags.length + r.exceptions.length}</span> : <span className="t-faint">—</span>}</td>
                 <td><Link href={`/approvals/${r.rfqId}`} className="btn btn-sm btn-primary">Open</Link></td>
               </tr>
@@ -213,7 +214,7 @@ function CompliancePanel({ data }: { data: Extract<DashboardData, { role: 'compl
               {data.overview.concentration.slice(0, 5).map((c) => (
                 <div key={c.dealerFirmId} className="cbar">
                   <span className="t-strong">{c.dealerName}</span>
-                  <div className="c-track"><div className="c-cap" /><div className="c-fill" style={{ width: `${Math.min(100, c.shareBps / 100)}%`, background: c.shareBps > 3500 ? 'var(--amber)' : 'var(--accent)' }} /></div>
+                  <div className="c-track"><div className="c-cap" /><div className="c-fill" style={{ width: `${Math.min(100, c.shareBps / 100)}%`, background: c.shareBps > CONCENTRATION_FLAG_THRESHOLD_BPS ? 'var(--amber)' : 'var(--accent)' }} /></div>
                   <span className="mono">{fmtShare(c.shareBps)}</span>
                 </div>
               ))}

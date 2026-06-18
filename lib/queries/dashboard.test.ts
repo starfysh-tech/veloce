@@ -1,13 +1,8 @@
 import { describe, expect, it } from 'vitest';
+import { concentrationBreachCount, highestConcentrationBps, responseRatePct } from './dashboard-shape';
 
 describe('dashboard shaping helpers', () => {
-  async function loadHelpers() {
-    return import('./dashboard-shape');
-  }
-
-  it('computes live response rate from live RFQs only', async () => {
-    const { responseRatePct } = await loadHelpers();
-
+  it('computes live response rate from live RFQs only', () => {
     expect(responseRatePct([
       { status: 'live', quoteCount: 2, invitedCount: 4 },
       { status: 'live', quoteCount: 1, invitedCount: 2 },
@@ -15,18 +10,14 @@ describe('dashboard shaping helpers', () => {
     ])).toBe(50);
   });
 
-  it('returns null response rate when no live dealers were invited', async () => {
-    const { responseRatePct } = await loadHelpers();
-
+  it('returns null response rate when no live dealers were invited', () => {
     expect(responseRatePct([
       { status: 'draft', quoteCount: 0, invitedCount: 0 },
       { status: 'live', quoteCount: 0, invitedCount: 0 },
     ])).toBeNull();
   });
 
-  it('finds highest concentration share', async () => {
-    const { highestConcentrationBps } = await loadHelpers();
-
+  it('finds highest concentration share', () => {
     expect(highestConcentrationBps({
       a: { shareBps: 2400 },
       b: { shareBps: 4100 },
@@ -34,9 +25,7 @@ describe('dashboard shaping helpers', () => {
     })).toBe(4100);
   });
 
-  it('counts concentration breaches above the policy cap', async () => {
-    const { concentrationBreachCount } = await loadHelpers();
-
+  it('counts concentration breaches above the policy cap', () => {
     expect(concentrationBreachCount([
       { shareBps: 3500 },
       { shareBps: 3501 },

@@ -10,8 +10,6 @@ import { getDealerConcentration } from '@/lib/queries/concentration';
 import { getAdminOverview, type AdminOverview } from '@/lib/queries/admin';
 import { concentrationBreachCount, highestConcentrationBps, responseRatePct } from '@/lib/queries/dashboard-shape';
 
-export { concentrationBreachCount, highestConcentrationBps, responseRatePct } from '@/lib/queries/dashboard-shape';
-
 export type UserRole = Extract<Caller, { kind: 'user' }>['role'];
 
 export type TraderDashboard = {

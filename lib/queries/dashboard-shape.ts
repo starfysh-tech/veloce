@@ -1,5 +1,7 @@
 // lib/queries/dashboard-shape.ts — pure dashboard projections.
 // Kept dependency-free so unit tests do not import DB-backed query modules.
+import { CONCENTRATION_FLAG_THRESHOLD_BPS } from '@/lib/policy';
+
 type ResponseRow = { status: string; quoteCount: number; invitedCount: number };
 
 export function responseRatePct(rfqs: ResponseRow[]): number | null {
@@ -15,6 +17,9 @@ export function highestConcentrationBps(concentration: Record<string, { shareBps
   return shares.length ? Math.max(...shares) : null;
 }
 
-export function concentrationBreachCount(rows: Array<{ shareBps: number }>, thresholdBps = 3500): number {
+export function concentrationBreachCount(
+  rows: Array<{ shareBps: number }>,
+  thresholdBps = CONCENTRATION_FLAG_THRESHOLD_BPS,
+): number {
   return rows.filter((c) => c.shareBps > thresholdBps).length;
 }

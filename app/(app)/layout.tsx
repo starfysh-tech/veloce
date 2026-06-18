@@ -6,29 +6,31 @@ import { resolveUser } from '@/lib/auth/caller';
 import { signOut } from '@/app/login/actions';
 import { Icon } from '@/components/ui';
 
+const DASHBOARD_NAV = { href: '/dashboard', label: 'Dashboard', icon: 'grid' };
+
 const NAV: Record<string, { href: string; label: string; icon: string }[]> = {
   trader: [
-    { href: '/dashboard', label: 'Dashboard', icon: 'grid' },
+    DASHBOARD_NAV,
     { href: '/rfqs', label: 'RFQs', icon: 'list' },
     { href: '/rfqs/new', label: 'Create RFQ', icon: 'plus' },
   ],
   approver: [
-    { href: '/dashboard', label: 'Dashboard', icon: 'grid' },
+    DASHBOARD_NAV,
     { href: '/rfqs', label: 'RFQs', icon: 'list' },
     { href: '/approvals', label: 'Approvals', icon: 'check' },
   ],
   ops: [
-    { href: '/dashboard', label: 'Dashboard', icon: 'grid' },
+    DASHBOARD_NAV,
     { href: '/rfqs', label: 'RFQs', icon: 'list' },
     { href: '/ops', label: 'Trades & STP', icon: 'flow' },
   ],
   compliance: [
-    { href: '/dashboard', label: 'Dashboard', icon: 'grid' },
+    DASHBOARD_NAV,
     { href: '/rfqs', label: 'RFQs', icon: 'list' },
     { href: '/compliance', label: 'Best Execution', icon: 'shield' },
   ],
   admin: [
-    { href: '/dashboard', label: 'Dashboard', icon: 'grid' },
+    DASHBOARD_NAV,
     { href: '/rfqs', label: 'RFQs', icon: 'list' },
     { href: '/compliance', label: 'Best Execution', icon: 'shield' },
     { href: '/admin', label: 'Administration', icon: 'gear' },
