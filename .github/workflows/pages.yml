@@ -3,7 +3,7 @@ name: Deploy Partner Site to GitHub Pages
 on:
   push:
     branches:
-      - docs/partner-site
+      - main
   workflow_dispatch:
 
 permissions:

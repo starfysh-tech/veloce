@@ -25,7 +25,7 @@ Pages are encrypted with [StatiCrypt v3](https://github.com/robinmoisson/staticr
 
 ## Deploying
 
-Push to `docs/partner-site` or trigger the workflow manually via **Actions → Deploy Partner Site to GitHub Pages → Run workflow**.
+Push to `main` after the partner-site PR merges, or trigger the workflow manually via **Actions → Deploy Partner Site to GitHub Pages → Run workflow**.
 
 ---
 
