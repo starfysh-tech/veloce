@@ -26,8 +26,8 @@
       <div class="eyebrow">OTC equity-derivatives execution</div>
       <h1>Structured multi-dealer auctions for OTC equity derivatives.</h1>
       <p class="lede">Veloce turns the phone-and-email RFQ process insurers use to hedge
-        equity risk into a timed, blind, multi-dealer auction — with a complete
-        best-execution trail from request to affirmation.</p>
+        equity risk into a timed, blind, multi-dealer auction — with visible
+        best-execution evidence from request to affirmation.</p>
       <div class="warnbox small">
         <strong>Pilot, mock data, no live trading.</strong> This is a functional
         parallel-run pilot. Workflows are real; execution stays on existing rails. No
@@ -37,9 +37,10 @@
 
     <section class="pitch-video-section" aria-labelledby="pitch-video-heading">
       <div class="eyebrow">30-second pitch</div>
-      <h2 id="pitch-video-heading">See the RFQ pilot workflow in motion.</h2>
-      <p class="small muted">A short walkthrough from RFQ setup through award controls,
-        STP preview, and compliance evidence. Parallel-run pilot, mock data, no live trading.</p>
+      <h2 id="pitch-video-heading">See one RFQ become a controlled evidence record.</h2>
+      <p class="small muted">A sharper 30-second pitch follows mock pilot data from
+        governed queue to award rationale, approval gates, persisted STP preview, and
+        compliance evidence. Parallel-run pilot, no live trading.</p>
       <video class="pitch-video" controls playsinline preload="metadata">
         <source src="assets/veloce-pitch-30s.mp4" type="video/mp4">
         Your browser does not support the video tag. Download the MP4 from
@@ -50,16 +51,16 @@
     <section>
       <h2>The problem</h2>
       <p>A treasury desk hedging a large equity book calls or emails a handful of dealer
-        banks, collects quotes in inboxes and chat windows, and picks one. The process is
-        slow, the competitive tension is hard to prove, partial-size liquidity is hard to
-        aggregate, and the best-execution evidence is scattered across messages.</p>
+        banks, collects quotes in inboxes and chat windows, and picks one. Competitive
+        tension, partial-size liquidity, approval context, and best-execution evidence can
+        end up scattered across messages.</p>
       <h2>What Veloce does</h2>
       <p>Veloce runs the request as a <strong>synchronized, blind auction</strong>: every
         invited dealer quotes the same request at the same time without seeing each other.
-        When the window closes, the desk sees a ranked board, an automatic
+        When the window closes, the desk sees a ranked board, an illustrative
         <strong>single-bank vs. blended-allocation</strong> comparison, threshold and
-        concentration checks, and a one-click route into approval, trade capture, STP, and
-        compliance — each step written to an append-only audit log.</p>
+        concentration checks, and a controlled path into approval, STP preview, and
+        compliance review — each step written to an append-only audit log.</p>
     </section>
 
     <section>
@@ -67,21 +68,21 @@
       <div class="grid">
         <div class="card"><strong>1 · Request</strong><br><span class="muted">A trader builds an RFQ and invites a dealer panel.</span></div>
         <div class="card"><strong>2 · Auction</strong><br><span class="muted">Dealers quote blind; the board ranks responses.</span></div>
-        <div class="card"><strong>3 · Award</strong><br><span class="muted">Single vs. blended construction, with best-ex math.</span></div>
+        <div class="card"><strong>3 · Award</strong><br><span class="muted">Single vs. blended construction, with award rationale attached.</span></div>
         <div class="card"><strong>4 · Approve</strong><br><span class="muted">Threshold &amp; concentration checks gate the award.</span></div>
-        <div class="card"><strong>5 · Capture &amp; STP</strong><br><span class="muted">Trades booked, FpML-style payload generated.</span></div>
-        <div class="card"><strong>6 · Affirm &amp; evidence</strong><br><span class="muted">Lifecycle advanced; compliance evidence exportable.</span></div>
+        <div class="card"><strong>5 · STP preview</strong><br><span class="muted">Trade details captured; payload preview persisted for operations review.</span></div>
+        <div class="card"><strong>6 · Affirm &amp; evidence</strong><br><span class="muted">Pilot lifecycle advanced; compliance evidence retained.</span></div>
       </div>
       <p class="small muted">See <a href="how-it-works.html">How it works</a> for the full
         narrative with screenshots, or the <a href="user-guide.html">User guide</a> for
-        role-by-role walkthroughs.</p>
+        role-by-role pilot flows.</p>
     </section>
 
     <section>
       <figure>
         <img src="images/trader-04-board.png" alt="Veloce quote board with blended-allocation comparison">
-        <figcaption>The quote board: ranked dealer responses with an automatic blended-vs-single
-          comparison — here a blended allocation saves 13.4 bps ($335,000) on a $250M hedge.</figcaption>
+        <figcaption>The quote board: ranked dealer responses with an illustrative
+          blended-vs-single comparison in the mock-data pilot record.</figcaption>
       </figure>
     </section>
 
@@ -90,16 +91,16 @@
       <div class="roles">
         <a href="user-guide.html#trader"><div class="card"><strong>Trader</strong><br><span class="muted">Launch RFQs, run the auction, construct the award.</span></div></a>
         <a href="user-guide.html#approver"><div class="card"><strong>Approver</strong><br><span class="muted">Review awards against policy thresholds and concentration.</span></div></a>
-        <a href="user-guide.html#ops"><div class="card"><strong>Operations</strong><br><span class="muted">Capture trades, generate STP, advance affirmation.</span></div></a>
+        <a href="user-guide.html#ops"><div class="card"><strong>Operations</strong><br><span class="muted">Review persisted STP preview and advance affirmation.</span></div></a>
         <a href="user-guide.html#compliance"><div class="card"><strong>Compliance</strong><br><span class="muted">Best-execution evidence, exceptions, concentration.</span></div></a>
         <a href="user-guide.html#admin"><div class="card"><strong>Administration</strong><br><span class="muted">Dealer panels, entitlements, policy reference, audit.</span></div></a>
       </div>
     </section>
 
     <section class="note">
-      <strong>Want to click through it?</strong> The <a href="demo.html">live demo</a> has a
-      seeded account for every role. Sign in, follow the guided tour, and watch a request
-      move from launch to affirmation.
+      <strong>Want to click through it?</strong> The <a href="demo.html">seeded demo</a> has
+      an account for every role. Sign in, follow the guided flow, and watch a mock request
+      move from launch to affirmation without live trading.
     </section>
   </main>
 
