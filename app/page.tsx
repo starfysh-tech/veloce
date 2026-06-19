@@ -21,14 +21,14 @@ export default function Home() {
           </p>
         </div>
 
-        <div className="marketing-video-card" aria-labelledby="pitch-video-heading">
+        <section className="marketing-video-card" aria-labelledby="pitch-video-heading">
           <div className="eyebrow">30-second institutional cut</div>
           <h2 id="pitch-video-heading">One RFQ decision becomes defensible evidence.</h2>
           <video className="marketing-video" controls playsInline preload="metadata">
             <source src="/veloce-pitch-30s.mp4" type="video/mp4" />
             Your browser does not support embedded video.
           </video>
-        </div>
+        </section>
       </section>
     </main>
   );

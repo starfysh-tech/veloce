@@ -442,7 +442,7 @@ pre.payload {
 .marketing-copy p {
   max-width: 680px;
   margin: 18px 0 0;
-  color: #c8d5e6;
+  color: var(--muted);
   font-size: clamp(17px, 2vw, 21px);
   line-height: 1.42;
 }
@@ -459,9 +459,9 @@ pre.payload {
   gap: 10px;
   margin-top: 26px;
 }
-.marketing-note {
-  color: var(--faint) !important;
-  font-size: 12px !important;
+.marketing-copy .marketing-note {
+  color: var(--faint);
+  font-size: 12px;
 }
 .marketing-video-card {
   padding: clamp(16px, 2.5vw, 26px);
