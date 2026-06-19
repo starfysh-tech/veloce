@@ -1,6 +1,6 @@
-# Pitch video v2 plan
+# Pitch video v2 plan (prior critique-driven rationale)
 
-> Drafted 2026-06-19 from the creative-director and investor critique of the first Remotion cut. This remains the rationale and critique-driven change record for the current v2 30-second pitch video.
+> Drafted 2026-06-19 from the creative-director and investor critique of the first Remotion cut. This remains the rationale and critique-driven change record for the prior v2 30-second pitch video; the current cut is the v3 institutional control/evidence story in `pitch-video-institutional-cut-plan.md`.
 
 ## Goal
 
@@ -31,7 +31,7 @@ Changes:
 - Avoid standalone quantified-outcome claims in video overlays.
 - Final close must include: `Parallel-run pilot · mock data · no live trading`.
 
-## Current v2 storyboard
+## Prior v2 storyboard
 
 | Frames | Seconds | Beat | Visual | Caption |
 | ---: | ---: | --- | --- | --- |
@@ -93,7 +93,7 @@ Avoid:
 
 ## Implementation reconciliation
 
-- The current v2 cut follows the frame map above while preserving the `VelocePitch30` composition contract: 900 frames, 1920×1080, 30fps.
-- `docs/pitch-video-remotion-plan.md` is the current implementation reference; this file explains why v2 changed.
-- Site copy should introduce the video as a controlled evidence-record pitch, not a generic product tour.
-- Final render and project-wide verification are owned by the main session.
+- The v2 cut followed the frame map above while preserving the `VelocePitch30` composition contract: 900 frames, 1920×1080, 30fps.
+- `docs/pitch-video-remotion-plan.md` is now the current institutional v3 implementation reference; this file explains why v2 moved away from the first procedural cut.
+- `docs/pitch-video-institutional-cut-plan.md` records the current v3 story direction.
+- Site copy should introduce the video as an institutional control and evidence story, not a workflow walkthrough.
