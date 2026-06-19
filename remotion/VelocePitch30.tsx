@@ -20,23 +20,23 @@ const evidenceDuration = 210;
 export const VelocePitch30 = () => {
   return (
     <AbsoluteFill style={{backgroundColor: '#050a13'}}>
-      <Sequence from={0} durationInFrames={oldWorldDuration} premountFor={30}>
+      <Sequence from={0} durationInFrames={oldWorldDuration}>
         <OldWorldFragments />
       </Sequence>
 
-      <Sequence from={decisionStart} durationInFrames={decisionDuration} premountFor={30}>
+      <Sequence from={decisionStart} durationInFrames={decisionDuration}>
         <DecisionLifecycle />
       </Sequence>
 
-      <Sequence from={governanceStart} durationInFrames={governanceDuration} premountFor={30}>
+      <Sequence from={governanceStart} durationInFrames={governanceDuration}>
         <GovernanceMoment />
       </Sequence>
 
-      <Sequence from={pricingStart} durationInFrames={pricingDuration} premountFor={30}>
+      <Sequence from={pricingStart} durationInFrames={pricingDuration}>
         <PricingProof />
       </Sequence>
 
-      <Sequence from={evidenceStart} durationInFrames={evidenceDuration} premountFor={30}>
+      <Sequence from={evidenceStart} durationInFrames={evidenceDuration}>
         <EvidencePacket />
       </Sequence>
     </AbsoluteFill>

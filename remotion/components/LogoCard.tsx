@@ -101,7 +101,7 @@ export const LogoCard = ({headline, subhead, disclaimer}: LogoCardProps) => {
         <h1 style={headlineStyle}>{headline}</h1>
         {subhead ? <p style={subheadStyle}>{subhead}</p> : null}
       </div>
-      {disclaimer ? <div style={disclaimerStyle}>{disclaimer}</div> : null}
+      {disclaimer ? <div style={{...disclaimerStyle, opacity}}>{disclaimer}</div> : null}
     </AbsoluteFill>
   );
 };

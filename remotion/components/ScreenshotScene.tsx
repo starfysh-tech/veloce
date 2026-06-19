@@ -6,7 +6,7 @@ export type ScreenshotSceneProps = {
   src: string;
   caption?: string;
   detail?: string;
-  durationFrames?: number;
+  durationFrames: number;
   startScale?: number;
   endScale?: number;
   startX?: number;
@@ -70,8 +70,8 @@ export const ScreenshotScene = ({
   objectPosition = 'center center',
 }: ScreenshotSceneProps) => {
   const frame = useCurrentFrame();
-  const {durationInFrames, fps} = useVideoConfig();
-  const sceneDuration = Math.max(2, durationFrames ?? durationInFrames);
+  const {fps} = useVideoConfig();
+  const sceneDuration = Math.max(2, durationFrames);
   const fadeFrames = Math.max(1, Math.round(0.4 * fps));
   const lastFrame = sceneDuration - 1;
 
@@ -106,7 +106,11 @@ export const ScreenshotScene = ({
         />
         <div style={vignetteStyle} />
       </div>
-      {caption ? <Caption label={caption} detail={detail} /> : null}
+      {caption ? (
+        <div style={{opacity}}>
+          <Caption label={caption} detail={detail} />
+        </div>
+      ) : null}
     </div>
   );
 };
