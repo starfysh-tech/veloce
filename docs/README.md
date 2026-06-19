@@ -10,8 +10,9 @@ merged to `main`.**
   ones marked **(blocks A)** before starting Block A.
 - **`blocks/block-*.md`** — a self-contained starter prompt per block. Each is written to
   drop into a fresh session and begin work immediately, with grounded file references.
-- **[`pitch-video-remotion-plan.md`](pitch-video-remotion-plan.md)** — current v2 30-second pitch-video storyboard and Remotion setup plan.
-- **[`pitch-video-v2-plan.md`](pitch-video-v2-plan.md)** — critique-driven v2 pitch-video rationale, storyboard, copy direction, and asset set.
+- **[`pitch-video-remotion-plan.md`](pitch-video-remotion-plan.md)** — current institutional v3 30-second pitch-video storyboard and Remotion setup plan.
+- **[`pitch-video-institutional-cut-plan.md`](pitch-video-institutional-cut-plan.md)** — current v3 institutional control/evidence story direction, guardrails, and implementation contract.
+- **[`pitch-video-v2-plan.md`](pitch-video-v2-plan.md)** — prior critique-driven v2 pitch-video rationale, storyboard, copy direction, and asset set.
 
 ## Workflow
 
