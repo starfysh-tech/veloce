@@ -417,3 +417,73 @@ pre.payload {
   border-radius: 99px; box-shadow: var(--shadow);
 }
 .note { font-size: 11.5px; color: var(--faint); }
+
+/* public marketing root */
+.marketing-page {
+  min-height: 100vh;
+  padding: clamp(28px, 5vw, 72px);
+  display: grid;
+  place-items: center;
+}
+.marketing-hero {
+  width: min(1180px, 100%);
+  display: grid;
+  grid-template-columns: minmax(0, 0.82fr) minmax(420px, 1fr);
+  gap: clamp(24px, 4vw, 54px);
+  align-items: center;
+}
+.marketing-copy h1 {
+  margin: 12px 0 0;
+  max-width: 760px;
+  font-size: clamp(42px, 6vw, 76px);
+  line-height: 0.95;
+  letter-spacing: -0.06em;
+}
+.marketing-copy p {
+  max-width: 680px;
+  margin: 18px 0 0;
+  color: var(--muted);
+  font-size: clamp(17px, 2vw, 21px);
+  line-height: 1.42;
+}
+.eyebrow {
+  color: var(--green);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.marketing-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 26px;
+}
+.marketing-copy .marketing-note {
+  color: var(--faint);
+  font-size: 12px;
+}
+.marketing-video-card {
+  padding: clamp(16px, 2.5vw, 26px);
+  border: 1px solid var(--border-soft);
+  border-radius: 24px;
+  background: color-mix(in srgb, var(--surface) 82%, transparent);
+  box-shadow: var(--shadow);
+}
+.marketing-video-card h2 {
+  margin: 9px 0 16px;
+  font-size: clamp(24px, 3vw, 36px);
+  line-height: 1.04;
+  letter-spacing: -0.04em;
+}
+.marketing-video {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: #050a13;
+}
+@media (max-width: 980px) {
+  .marketing-hero { grid-template-columns: 1fr; }
+}
