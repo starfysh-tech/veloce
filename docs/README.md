@@ -10,6 +10,7 @@ merged to `main`.**
   ones marked **(blocks A)** before starting Block A.
 - **`blocks/block-*.md`** — a self-contained starter prompt per block. Each is written to
   drop into a fresh session and begin work immediately, with grounded file references.
+- **[`pitch-video-remotion-plan.md`](pitch-video-remotion-plan.md)** — 30-second pitch-video storyboard and Remotion setup plan.
 
 ## Workflow
 
