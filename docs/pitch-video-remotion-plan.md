@@ -1,94 +1,90 @@
-# Approved 30-second Veloce pitch video Remotion plan
+# Current institutional v3 30-second Veloce pitch video Remotion plan
 
 ## Goal
 
-Create a 30-second screenshot-led pitch video that explains Veloce's RFQ workflow from trader intent through approval, award rationale, compliance visibility, and downstream operations handoff.
+Maintain the v3 30-second institutional pitch video that frames Veloce as a parallel-run control and evidence layer beside execution. The cut should show how a hard OTC hedge decision becomes structured, governed, auditable, and defensible without implying live trading, broker connectivity, or trade-system-of-record responsibility.
 
 The durable render target is a Remotion composition named `VelocePitch30`, 1920×1080, 30fps, 900 frames, rendered to `out/veloce-pitch-30s.mp4`.
 
 ## Audience assumption
 
-Primary audience: experienced financial-services operators, compliance leaders, and pilot sponsors who need to understand the workflow quickly without being shown a live production system.
+Primary audience: institutional investors, financial-services operators, compliance leaders, and pilot sponsors evaluating whether Veloce can make complex RFQ decisions provable under review.
 
-The video should feel like a controlled product walkthrough for a parallel-run pilot, not a launch claim or live-trading demonstration.
+The video should feel like a concise institutional control story for a parallel-run pilot: calm, specific, explicit about guardrails, and clear that the demo uses mock/seeded data.
 
 ## Accuracy guardrails
 
-- Say and show that this is a parallel-run pilot using mock data.
-- Do not imply live trading, automated execution, broker connectivity, or production STP transmission.
-- Position STP as previewed and persisted for operations review, not transmitted downstream.
-- Keep the story anchored to visible MVP capabilities: RFQ creation, dealer board, approval detail, award/compliance rationale, and operations payload preview.
-- Avoid unverified performance, savings, regulatory, or adoption claims.
+- Say and show that this is a parallel-run pilot using mock/seeded-demo data.
+- Position Veloce beside execution as a control and evidence layer, not as an execution venue.
+- Do not imply live trading, automated execution, broker connectivity, production STP transmission, or a system of record for trades.
+- Position STP/FpML-style output as a prepared payload for operations review, not as a transmitted downstream instruction.
+- Keep the story anchored to visible MVP capabilities: governed RFQ record, invited/responded dealer evidence, award rationale, policy exceptions, approval governance, prepared payload, and compliance evidence.
+- Use only product-backed seeded/mock figures when showing pricing math: blended `2.656%` vs best single `2.79%`, `13.4 bps`, and `$335,000 on $250M`.
 - Final close must include: `Parallel-run pilot · mock data · no live trading`.
 
-## Recommended screenshot-led approach
+## Recommended institutional approach
 
-Use the existing static product screenshots as the primary source of truth. The video should rely on slow frame-driven pans and zooms, short lower-third captions, and simple branded intro/outro cards.
+Use Remotion as a narrative layer, not as a screenshot tour. Screenshots should appear as brief receipt panels inside motion-native scenes; the primary story is the control path from fragmented evidence to a governed, client-owned review packet.
 
 Implementation rules:
 
 - Store copied screenshots in `public/pitch/`.
 - Reference images with `staticFile()` and render them with Remotion `<Img>`.
 - Drive motion with `useCurrentFrame()`, `useVideoConfig()`, and `interpolate()`.
-- Use `<Sequence>` with `premountFor={30}` for screenshot scenes.
+- Use `<Sequence>` with `premountFor={30}` where screenshot receipt panels benefit from preloading.
 - Do not use CSS transitions, CSS keyframes, Tailwind animation classes, native `<img>`, Next.js `<Image>`, or CSS `background-image`.
 
-## Storyboard
+## Current v3 institutional storyboard
 
 | Section | Frames | Seconds | Visual | Message |
 | --- | ---: | ---: | --- | --- |
-| Problem | 0-119 | 0.0-4.0 | Dark branded intro card | OTC RFQ evidence is hard to review when auction work, approvals, STP preview, and compliance records are split. |
-| Auction | 120-269 | 4.0-9.0 | `trader-03-create.png` | Veloce structures the RFQ and dealer outreach in one controlled workspace. |
-| Award math | 270-479 | 9.0-16.0 | `trader-04-board.png` | The mock scenario shows quote-board context and illustrative award math before the pilot record advances. |
-| Controls | 480-659 | 16.0-22.0 | `approver-03-detail.png` | Approvers review exceptions, rationale, and STP guardrails before downstream handoff. |
-| Downstream | 660-809 | 22.0-27.0 | `ops-03-payload.png`, then `compliance-02-bestex.png` | Operations reviews the persisted STP preview; compliance reviews best-ex evidence from mock pilot data. |
-| Close | 810-899 | 27.0-30.0 | Dark branded outro card | Veloce connects auction, controls, and evidence for a parallel-run mock-data pilot. |
+| Old world | 0-119 | 0.0-4.0 | Chat, email, spreadsheet, and phone-log fragments collapse into one RFQ record | A $250M hedge starts as scattered evidence; Veloce makes the decision record structured. |
+| Decision lifecycle | 120-299 | 4.0-10.0 | Graph nodes assemble around the RFQ record: invited, responded, liquidity, allocation, concentration, exception, approval, evidence | The winning quote is only part of a decision that must survive best-execution review. |
+| Governance moment | 300-509 | 10.0-17.0 | Concentration check fires amber, exception is logged, approver acknowledgment stamps the record | Veloce governs the decision before execution while preserving segregation of duties. |
+| Pricing proof | 510-689 | 17.0-23.0 | Partial-liquidity bars combine into a blended award against the best single quote | Product-backed pilot math shows `13.4 bps` / `$335,000 on $250M` as supporting evidence, not an unsupported savings claim. |
+| Evidence close | 690-899 | 23.0-30.0 | Event log, quote ladder, approval, and prepared payload stack into one evidence packet, then widen into client-owned best-execution evidence | Every decision leaves a defensible record that survives review. |
 
 ## Scene implementation notes
 
-| Scene | Asset | Primary caption | Detail line | Suggested motion |
-| --- | --- | --- | --- | --- |
-| Problem | Logo card | "Problem: RFQ evidence is hard to review when work is split." | "This 30-second walkthrough uses mock data in a parallel-run pilot from trader action through approval, STP preview, and compliance review." | Fade in headline and detail over the first second. |
-| Auction | `trader-03-create.png` | "Create the RFQ and move it into a dealer auction." | "Parallel-run pilot workflow with mock data." | Start wide, slowly zoom toward the RFQ form and dealer selection. |
-| Award math | `trader-04-board.png` | "Illustrative award math stays visible before the pilot record advances." | "Seeded demo compares single-bank and blended allocation." | Pan from the board summary toward bid rows and award fields. |
-| Approval controls | `approver-03-detail.png` | "Approvers review exceptions before any downstream handoff." | "STP is previewed and persisted, not transmitted." | Slight zoom into the approval detail and policy context. |
-| Ops preview | `ops-03-payload.png` | "Ops reviews the persisted STP preview." | "Pilot payload only; no live trading transmission." | Slow zoom toward payload detail and status metadata. |
-| Compliance evidence | `compliance-02-bestex.png` | "Compliance reviews best-ex evidence from the mock pilot data." | "Shared record, controlled workflow, no live trading." | Hold on the evidence workspace; avoid fast motion over dense data. |
-| Close | Logo card | "Veloce connects auction, controls, and evidence." | "Parallel-run pilot · mock data · no live trading" | Fade out after the disclaimer has been readable for at least one second. |
+| Scene | Primary copy | Detail line | Suggested motion |
+| --- | --- | --- | --- |
+| Old world | "A $250M hedge starts as calls, chats, spreadsheets, and inbox evidence." | "Veloce structures the RFQ record without touching live execution." | Fragments enter as specific evidence cards, then collapse into one governed RFQ record. |
+| Decision lifecycle | "The winning quote is only part of the decision." | "Invited, responded, liquidity, allocation, exceptions, approvals, and evidence stay connected." | Build graph nodes sequentially around the record so the lifecycle is legible. |
+| Governance moment | "Veloce structures and governs the decision before execution." | "Policy breach: `38%` vs `35%` cap; exception logged; approver acknowledgment preserved." | Let the amber control state become the narrative climax; avoid fast movement over the exception text. |
+| Pricing proof | "Pilot math supports best-execution evidence." | "`2.656%` blended vs `2.79%` best single · `13.4 bps` · `$335,000 on $250M`." | Stack partial quotes into a blended award, then reveal the product-backed comparison. |
+| Evidence close | "Every decision leaves a record that survives review." | "Client-owned evidence and benchmarks · prepared payload, not transmitted · parallel-run pilot, mock data, no live trading." | Stack evidence artifacts into one packet; hold the disclaimer readable for at least one second. |
 
 ## Visual direction
 
 - Style: institutional, dark, high-contrast, calm motion.
 - Background: deep navy/charcoal with subtle gradients or grid accents.
-- Accent: restrained green or cyan for successful controls and handoff points.
-- Typography: large concise headlines, readable lower thirds, no dense paragraphs on screen.
-- Motion: slow 3-5% zooms and small pan offsets to guide attention across screenshots.
-- Captions: lower-third blocks with one primary phrase and one optional detail line.
+- Accent: restrained amber for governance exceptions, green/cyan for confirmed controls and evidence continuity.
+- Typography: large concise headlines, readable supporting lines, no dense paragraphs on screen.
+- Motion: frame-driven assembly, small pan offsets, and controlled scale changes that clarify control flow.
+- Captions: institutional lower-third blocks with one primary phrase and one optional evidence line.
 - Cuts: simple sequence changes or short opacity fades driven by frame interpolation.
 
 ## Asset list
 
-Copy these source screenshots exactly into Remotion's public asset path:
+These source screenshots are available as receipt panels in Remotion's public asset path:
 
 | Source | Remotion path | Use |
 | --- | --- | --- |
-| `site/images/trader-03-create.png` | `public/pitch/trader-03-create.png` | RFQ setup / auction creation |
-| `site/images/trader-04-board.png` | `public/pitch/trader-04-board.png` | Dealer board / bid comparison |
-| `site/images/approver-03-detail.png` | `public/pitch/approver-03-detail.png` | Approval detail / award rationale |
-| `site/images/compliance-02-bestex.png` | `public/pitch/compliance-02-bestex.png` | Best-execution controls |
-| `site/images/ops-03-payload.png` | `public/pitch/ops-03-payload.png` | Persisted STP payload preview |
+| `site/images/trader-01-dashboard.png` | `public/pitch/trader-01-dashboard.png` | Governed RFQ queue / desk context receipt |
+| `site/images/trader-03-create.png` | `public/pitch/trader-03-create.png` | Structured RFQ / controlled panel receipt |
+| `site/images/trader-04-board.png` | `public/pitch/trader-04-board.png` | Dealer response / award rationale receipt |
+| `site/images/approver-02-queue.png` | `public/pitch/approver-02-queue.png` | Approval queue / policy warning receipt |
+| `site/images/approver-03-detail.png` | `public/pitch/approver-03-detail.png` | Approval detail / exception evidence receipt |
+| `site/images/ops-03-payload.png` | `public/pitch/ops-03-payload.png` | Prepared payload preview receipt |
+| `site/images/compliance-03-concentration.png` | `public/pitch/compliance-03-concentration.png` | Compliance evidence / concentration review receipt |
+
+`trader-02-blotter.png` and `compliance-02-bestex.png` remain available as supporting receipt panels if the institutional cut needs additional evidence context.
 
 No external brand, market-data, broker, or trading-system assets are required.
 
 ## Remotion setup
 
-Install Remotion in the existing npm workspace:
-
-```bash
-npm install --save-dev remotion @remotion/cli @remotion/renderer
-```
-
-Add package scripts:
+Remotion is installed in the existing npm workspace, with package scripts:
 
 ```json
 {
@@ -103,15 +99,20 @@ Expected Remotion files:
 remotion/index.ts
 remotion/Root.tsx
 remotion/VelocePitch30.tsx
+remotion/components/InstitutionalScenes.tsx
 remotion/components/Caption.tsx
 remotion/components/ScreenshotScene.tsx
 remotion/components/LogoCard.tsx
+public/pitch/trader-01-dashboard.png
 public/pitch/trader-03-create.png
 public/pitch/trader-04-board.png
+public/pitch/approver-02-queue.png
 public/pitch/approver-03-detail.png
-public/pitch/compliance-02-bestex.png
 public/pitch/ops-03-payload.png
+public/pitch/compliance-03-concentration.png
 ```
+
+`InstitutionalScenes.tsx` owns the motion-native v3 scenes; `VelocePitch30.tsx` remains the single owner of sequence timing and scene order.
 
 ## Composition and timeline contract
 
@@ -130,20 +131,20 @@ Register one composition:
 Timeline:
 
 ```text
-Problem:    0-119
-Auction:    120-269
-Award math: 270-479
-Controls:   480-659
-Downstream: 660-809
-Close:      810-899
+Old world:            0-119
+Decision lifecycle:   120-299
+Governance moment:    300-509
+Pricing proof:        510-689
+Evidence close:       690-899
 ```
 
 Component responsibilities:
 
 - `Caption` renders reusable readable lower-third copy.
-- `ScreenshotScene` handles image loading, crop, scale, pan, and caption overlay.
-- `LogoCard` renders intro/outro cards without external assets.
-- `VelocePitch30` owns the 900-frame sequence order and scene copy.
+- `ScreenshotScene` handles image loading, crop, scale, pan, and caption overlay for receipt panels.
+- `LogoCard` renders intro/outro cards without external assets when needed.
+- `InstitutionalScenes` renders the motion-native old-world fragments, decision lifecycle, governance moment, pricing proof, and evidence packet scenes.
+- `VelocePitch30` owns the 900-frame sequence order and institutional scene copy.
 
 Reference implementation outline:
 
@@ -158,19 +159,7 @@ Reference implementation outline:
 />
 ```
 
-```tsx
-<Sequence from={120} durationInFrames={150} premountFor={30}>
-  <ScreenshotScene
-    src="pitch/trader-03-create.png"
-    caption="Structure the RFQ once"
-    detail="Trader intent, invitation list, economics, and context stay together."
-    startScale={1}
-    endScale={1.05}
-  />
-</Sequence>
-```
-
-Use local sequence frames inside reusable scene components: `useCurrentFrame()` inside `ScreenshotScene` should start at `0` for each scene because it is mounted inside that scene's `<Sequence>`.
+Use local sequence frames inside reusable scene components: `useCurrentFrame()` inside a scene mounted by `<Sequence>` should start at `0` for that scene. Use `useVideoConfig()` for frame-rate-aware timing constants where useful.
 
 ## Preview and render commands
 
@@ -200,28 +189,23 @@ Use this as optional narration or as timing guidance for on-screen captions.
 
 | Section | Script |
 | --- | --- |
-| Problem | "Private-credit RFQs still move through fragmented messages, spreadsheets, and manual checks." |
-| Auction | "Veloce gives traders one controlled workspace to structure the RFQ and invite dealers." |
-| Award math | "Bids, economics, approval context, and exception rationale stay visible before award." |
-| Controls | "Compliance can review best-execution evidence and concentration impact in the same flow." |
-| Downstream | "Operations receives a persisted STP payload preview for parallel-run review." |
-| Close | "Veloce is a mock-data pilot for controlled RFQ workflows: no live trading." |
+| Old world | "A $250M hedge starts as calls, chats, spreadsheets, and inbox evidence." |
+| Decision lifecycle | "The winning quote is only part of the decision." |
+| Governance moment | "Veloce structures and governs the decision before execution." |
+| Pricing proof | "Pilot math supports best-execution evidence: `2.656%` blended versus `2.79%` best single in the mock pilot record." |
+| Evidence close | "Every decision leaves client-owned evidence that survives review. Parallel-run pilot, mock data, no live trading." |
 
-## Implementation checklist
+## Current implementation contract
 
-- [ ] Install Remotion dev dependencies with npm and commit the lockfile changes.
-- [ ] Add `video:studio` and `video:render:pitch` scripts.
-- [ ] Copy the five pitch screenshots into `public/pitch/`.
-- [ ] Register `VelocePitch30` in `remotion/Root.tsx` at 1920×1080, 30fps, 900 frames.
-- [ ] Build `Caption`, `ScreenshotScene`, and `LogoCard` with frame-driven Remotion animation.
-- [ ] Assemble the six storyboard sections in `VelocePitch30` with the contracted frame ranges.
-- [ ] Confirm the final card includes `Parallel-run pilot · mock data · no live trading`.
-- [ ] Preview in Remotion Studio and adjust framing only if captions or screenshot focal points are hard to read.
-- [ ] Render `out/veloce-pitch-30s.mp4` and verify duration/dimensions.
+- Remotion scripts and dependencies are present in the npm workspace.
+- V3 pitch screenshots remain in `public/pitch/` as receipt panels.
+- `VelocePitch30` remains registered at 1920×1080, 30fps, 900 frames.
+- `Caption`, `ScreenshotScene`, and `LogoCard` must continue to use frame-driven Remotion animation.
+- The v3 storyboard covers old-world evidence fragmentation, decision lifecycle, governance moment, pricing proof, and evidence close.
+- The final card includes `Parallel-run pilot · mock data · no live trading`.
 
-## Open choices
+## Current decisions
 
-- Whether to use recorded voiceover, captions only, or both.
-- Whether to include a subtle background music bed; if used, it must not obscure narration.
-- Exact pan/zoom focal points for each screenshot after viewing them in Remotion Studio.
-- Whether the close card should use "Request pilot review" or remain a neutral brand close.
+- The institutional v3 cut is captions-first; recorded voiceover and background music are optional future production choices.
+- The close card remains a neutral institutional evidence close, not a conversion CTA.
+- Pan, zoom, and graph assembly choices should serve auditability, governance, and best-execution evidence rather than generic screen-tour motion.

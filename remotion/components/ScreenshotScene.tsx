@@ -13,6 +13,7 @@ export type ScreenshotSceneProps = {
   endX?: number;
   startY?: number;
   endY?: number;
+  objectPosition?: CSSProperties['objectPosition'];
 };
 
 const fillStyle: CSSProperties = {
@@ -66,6 +67,7 @@ export const ScreenshotScene = ({
   endX = 0,
   startY = 0,
   endY = 0,
+  objectPosition = 'center center',
 }: ScreenshotSceneProps) => {
   const frame = useCurrentFrame();
   const {durationInFrames, fps} = useVideoConfig();
@@ -98,6 +100,7 @@ export const ScreenshotScene = ({
           src={staticFile(src)}
           style={{
             ...imageStyleBase,
+            objectPosition,
             transform: `translate3d(${x}px, ${y}px, 0) scale(${scale})`,
           }}
         />
